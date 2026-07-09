@@ -160,8 +160,14 @@ function renderHistoryTable(history) {
         // Format Teks PnL
         let pnlText = '-';
         if (item.type === 'Jual') {
-           const pnlClass = parseFloat(item.pnlPct) >= 0 ? 'text-green' : 'text-red';
-           pnlText = `<span class="${pnlClass}">${item.pnlUsd}<br>(${item.pnlPct}%)</span>`;
+           const pnlUsdVal = parseFloat(item.pnlUsd) || 0;
+           const pnlPctVal = parseFloat(item.pnlPct) || 0;
+           const isProfit = pnlUsdVal >= 0;
+           const pnlClass = isProfit ? 'text-green' : 'text-red';
+           const sign = isProfit ? '+' : '';
+           const formattedUsd = formatUsd(Math.abs(pnlUsdVal));
+           
+           pnlText = `<span class="${pnlClass}">${sign}${formattedUsd}<br>(${sign}${pnlPctVal.toFixed(2)}%)</span>`;
         }
         
         const typeClass = item.type === 'Beli' ? 'type-beli' : 'type-jual';
@@ -293,8 +299,8 @@ saveJournalBtn.addEventListener('click', () => {
             usdValue: sellUsd,    // Nilai uang yang masuk
             btcPrice: sellPrice,
             btcQty: -sellBtc,     // Minus karena saldo berkurang
-            pnlUsd: pnlAmount >= 0 ? `+${pnlAmount.toFixed(2)}` : pnlAmount.toFixed(2),
-            pnlPct: pnlAmount >= 0 ? `+${pnlPercentage.toFixed(2)}` : pnlPercentage.toFixed(2),
+            pnlUsd: pnlAmount,
+            pnlPct: pnlPercentage,
             notes: tradeNotes.value
         };
     }

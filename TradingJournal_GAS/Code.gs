@@ -140,8 +140,8 @@ function saveTransaction(data) {
       data.usdValue,     // Modal (Beli) atau Hasil (Jual)
       data.btcPrice,     // Harga eksekusi BTC
       data.btcQty,       // Kuantitas BTC (+ atau -)
-      data.pnlUsd !== undefined ? data.pnlUsd : "", 
-      data.pnlPct !== undefined ? data.pnlPct : "", 
+      data.pnlUsd !== undefined ? parseFloat(data.pnlUsd) : "", 
+      data.pnlPct !== undefined ? parseFloat(data.pnlPct) : "", 
       data.notes || ""
     ]);
     

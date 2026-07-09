@@ -38,7 +38,10 @@ function getPortfolio() {
       // Pastikan baris tidak kosong sepenuhnya
       if (!row[0] && !row[1]) continue;
 
-      const date = row[0];
+      let date = row[0];
+      if (date instanceof Date) {
+         date = Utilities.formatDate(date, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+      }
       const type = row[1]; // "Beli" atau "Jual"
       const usdValue = parseFloat(row[2]) || 0;
       const btcPrice = parseFloat(row[3]) || 0;

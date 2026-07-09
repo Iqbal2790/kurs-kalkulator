@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Kurs</title>
+    <!-- Mengambil font modern dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Font Space Grotesk (Judul), Inter (Body), JetBrains Mono (Angka) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Menghubungkan file desain CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Header & Toggle Tema -->
+        <header class="app-header">
+            <h1 class="title">Kalkulator Kurs</h1>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Ganti mode terang/gelap">
+                <span class="theme-icon moon">🌙</span>
+                <span class="theme-icon sun">☀️</span>
+                <div class="toggle-pill"></div>
+            </button>
+        </header>
+
+        <!-- Panel Utama (Glass Card) -->
+        <main class="calculator-container glass-surface">
+            <!-- Sub-Panel Atas: Input Uang -->
+            <div class="calc-panel input-panel">
+                <label for="amount" class="visually-hidden">Jumlah Uang</label>
+                <input type="number" id="amount" value="1" min="0" step="any" placeholder="0">
+                
+                <div class="currency-chip">
+                    <label for="from-currency" class="visually-hidden">Mata Uang Asal</label>
+                    <select id="from-currency">
+                        <option value="USD">USD</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Orb Signature: Tombol Tukar (Di Tengah) -->
+            <div class="orb-container">
+                <button id="swap-btn" class="swap-orb" aria-label="Tukar mata uang" title="Tukar mata uang">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M11 18l-4 4-4-4"/><path d="M17 14V2"/><path d="M21 6l-4-4-4 4"/></svg>
+                </button>
+            </div>
+
+            <!-- Sub-Panel Bawah: Hasil -->
+            <div class="calc-panel result-panel">
+                <div id="conversion-result" class="result-number">...</div>
+                
+                <div class="currency-chip">
+                    <label for="to-currency" class="visually-hidden">Mata Uang Tujuan</label>
+                    <select id="to-currency">
+                        <option value="IDR">IDR</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Footer Info Tanggal & Rate -->
+            <div class="info-footer">
+                <p id="exchange-rate-info" class="rate-info">Mengambil data...</p>
+                <p class="date-info">Update: <span id="last-update">-</span> (kurs harian ECB)</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Menghubungkan file logika JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

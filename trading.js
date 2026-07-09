@@ -1,9 +1,15 @@
 // trading.js - Logika untuk Trading Kalkulator
 
-// Elemen DOM
-const coinAmountInput = document.getElementById('coinAmount');
+// Elemen DOM Input
+const buyUsdAmountInput = document.getElementById('buyUsdAmount');
 const buyPriceInput = document.getElementById('buyPrice');
+const sellUsdAmountInput = document.getElementById('sellUsdAmount');
 const sellPriceInput = document.getElementById('sellPrice');
+
+// Elemen DOM Teks BTC
+const buyBtcAmountDisplay = document.getElementById('buyBtcAmount');
+const sellBtcAmountDisplay = document.getElementById('sellBtcAmount');
+const sellWarning = document.getElementById('sellWarning');
 
 const pnlAmountDisplay = document.getElementById('pnlAmount');
 const pnlPercentageDisplay = document.getElementById('pnlPercentage');
@@ -45,25 +51,44 @@ function updateFontSize(element, text) {
 
 // Fungsi Menghitung Profit/Loss
 function calculateTrading() {
-    const amount = parseFloat(coinAmountInput.value) || 0;
+    const buyUsd = parseFloat(buyUsdAmountInput.value) || 0;
     const buyPrice = parseFloat(buyPriceInput.value) || 0;
+    const sellUsd = parseFloat(sellUsdAmountInput.value) || 0;
     const sellPrice = parseFloat(sellPriceInput.value) || 0;
 
-    const totalInvestment = amount * buyPrice;
-    const totalReturn = amount * sellPrice;
-    const pnlAmount = totalReturn - totalInvestment;
+    // Hitung Auto Convert BTC
+    const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
+    const sellBtc = sellPrice > 0 ? sellUsd / sellPrice : 0;
+
+    // Tampilkan kuantitas BTC (format 8 desimal max)
+    buyBtcAmountDisplay.textContent = `${buyBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
+    sellBtcAmountDisplay.textContent = `${sellBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
+
+    // Validasi kuantitas jual tidak melebihi beli
+    if (sellBtc > buyBtc && buyBtc > 0) {
+        sellWarning.style.display = 'block';
+    } else {
+        sellWarning.style.display = 'none';
+    }
+
+    // Modal yang terpakai untuk kuantitas BTC yang dijual
+    const costOfSoldBtc = sellBtc * buyPrice;
     
+    // Keuntungan/Kerugian adalah Hasil Jual USD dikurangi Modal Koin yang dijual
+    const pnlAmount = sellUsd - costOfSoldBtc;
+    
+    // Persentase (Keuntungan / Modal Terpakai)
     let pnlPercentage = 0;
-    if (totalInvestment > 0) {
-        pnlPercentage = (pnlAmount / totalInvestment) * 100;
+    if (costOfSoldBtc > 0) {
+        pnlPercentage = (pnlAmount / costOfSoldBtc) * 100;
     }
 
     // Update Text
     const sign = pnlAmount >= 0 ? '+' : '';
     pnlAmountDisplay.textContent = `${sign}${formatMoney(pnlAmount)}`;
     pnlPercentageDisplay.textContent = `${sign}${pnlPercentage.toFixed(2)}%`;
-    totalInvestmentDisplay.textContent = formatMoney(totalInvestment);
-    totalReturnDisplay.textContent = formatMoney(totalReturn);
+    totalInvestmentDisplay.textContent = formatMoney(costOfSoldBtc); // Tampilkan modal yg terjual
+    totalReturnDisplay.textContent = formatMoney(sellUsd); // Tampilkan hasil jualan
 
     // Update Font Size untuk PnL
     updateFontSize(pnlAmountDisplay, pnlAmountDisplay.textContent);
@@ -83,7 +108,7 @@ function calculateTrading() {
 }
 
 // Mencegah input huruf e, +, - pada input angka
-[coinAmountInput, buyPriceInput, sellPriceInput].forEach(input => {
+[buyUsdAmountInput, buyPriceInput, sellUsdAmountInput, sellPriceInput].forEach(input => {
     input.addEventListener('keydown', (e) => {
         if (['e', 'E', '+', '-'].includes(e.key)) {
             e.preventDefault();

@@ -32,50 +32,59 @@
         <!-- Seksi Kiri: Kalkulator -->
         <main class="calculator-panel">
             
-            <!-- Jumlah Koin -->
-            <div class="amount-section">
-                <div class="section-label">
-                    <span class="arrow-icon">🪙</span> Jumlah Koin
-                </div>
-                <div class="input-row">
-                    <input type="number" id="coinAmount" value="1" min="0" step="any">
-                    <div class="currency-selector">
-                        <div class="selected-display">
-                            <span class="currency-symbol">₿</span>
-                            <span class="currency-code">BTC</span>
+            <!-- SECTION BELI -->
+            <div class="trade-section" style="border: 1px solid var(--border-glass); padding: 20px; border-radius: 20px; margin-bottom: 25px; background: var(--surface-glass);">
+                <h4 style="margin-bottom: 15px; color: var(--text-secondary); font-size: 1.1rem;">🟢 Beli (Buy)</h4>
+                
+                <div class="amount-section" style="margin-bottom: 20px;">
+                    <div class="section-label">Beli USD (Modal)</div>
+                    <div class="input-row">
+                        <input type="number" id="buyUsdAmount" value="1000" min="0" step="any">
+                        <div class="currency-selector">
+                            <div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="amount-section">
+                    <div class="section-label">Di Harga 1 BTC/USD</div>
+                    <div class="input-row">
+                        <input type="number" id="buyPrice" value="60000" min="0" step="any">
+                        <div class="currency-selector">
+                            <div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.95rem; color: var(--text-secondary);">
+                        Mendapatkan: <span id="buyBtcAmount" style="font-weight: 600; color: var(--text-primary);">0 BTC</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Harga Beli -->
-            <div class="amount-section">
-                <div class="section-label">
-                    <span class="arrow-icon">↙</span> Harga Beli (Buy)
-                </div>
-                <div class="input-row">
-                    <input type="number" id="buyPrice" value="60000" min="0" step="any">
-                    <div class="currency-selector">
-                        <div class="selected-display">
-                            <span class="currency-symbol">$</span>
-                            <span class="currency-code">USD</span>
+            <!-- SECTION JUAL -->
+            <div class="trade-section" style="border: 1px solid var(--border-glass); padding: 20px; border-radius: 20px; background: var(--surface-glass);">
+                <h4 style="margin-bottom: 15px; color: var(--text-secondary); font-size: 1.1rem;">🔴 Jual (Sell)</h4>
+                
+                <div class="amount-section" style="margin-bottom: 20px;">
+                    <div class="section-label">Jual USD (Hasil)</div>
+                    <div class="input-row">
+                        <input type="number" id="sellUsdAmount" value="1100" min="0" step="any">
+                        <div class="currency-selector">
+                            <div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Harga Jual -->
-            <div class="amount-section">
-                <div class="section-label">
-                    <span class="arrow-icon">↗</span> Harga Jual (Sell)
-                </div>
-                <div class="input-row">
-                    <input type="number" id="sellPrice" value="65000" min="0" step="any">
-                    <div class="currency-selector">
-                        <div class="selected-display">
-                            <span class="currency-symbol">$</span>
-                            <span class="currency-code">USD</span>
+                <div class="amount-section">
+                    <div class="section-label">Di Harga 1 BTC/USD</div>
+                    <div class="input-row">
+                        <input type="number" id="sellPrice" value="66000" min="0" step="any">
+                        <div class="currency-selector">
+                            <div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div>
                         </div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.95rem; color: var(--text-secondary);">
+                        Kuantitas Dijual: <span id="sellBtcAmount" style="font-weight: 600; color: var(--text-primary);">0 BTC</span>
+                        <div id="sellWarning" style="color: #f44336; display: none; margin-top: 5px; font-weight: 500;">⚠️ Error: Jual melebihi kuantiti beli!</div>
                     </div>
                 </div>
             </div>

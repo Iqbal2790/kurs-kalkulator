@@ -248,26 +248,7 @@ input[type="number"]::-webkit-inner-spin-button {
     transform: scale(0.98);
 }
 
-.settings-btn {
-    width: 90px;
-    height: 64px;
-    border-radius: 999px;
-    background: var(--btn-grey);
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: background 0.2s;
-}
 
-.settings-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
-}
-[data-theme="dark"] .settings-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
 
 /* Footer info */
 .info-footer {

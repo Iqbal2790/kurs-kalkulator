@@ -165,7 +165,7 @@ function renderHistoryTable(history) {
            const isProfit = pnlUsdVal >= 0;
            const pnlClass = isProfit ? 'text-green' : 'text-red';
            const sign = isProfit ? '+' : '';
-           const formattedUsd = formatUsd(Math.abs(pnlUsdVal));
+           const formattedUsd = formatMoney(Math.abs(pnlUsdVal));
            
            pnlText = `<span class="${pnlClass}">${sign}${formattedUsd}<br>(${sign}${pnlPctVal.toFixed(2)}%)</span>`;
         }

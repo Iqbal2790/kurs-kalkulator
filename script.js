@@ -30,9 +30,15 @@ async function fetchCurrencies() {
         currenciesData['ETH'] = 'Ethereum';
         
         populateDropdowns();
-        // Set default value
-        fromCurrencySelect.value = 'USD';
-        toCurrencySelect.value = 'IDR';
+        // Set default value dari localStorage atau default
+        const savedFrom = localStorage.getItem('kurs_from');
+        const savedTo = localStorage.getItem('kurs_to');
+        const savedAmount = localStorage.getItem('kurs_amount');
+        
+        fromCurrencySelect.value = savedFrom || 'USD';
+        toCurrencySelect.value = savedTo || 'IDR';
+        if (savedAmount) amountInput.value = savedAmount;
+
         updateCurrencyDisplay();
         
         // Ambil data kurs pertama kali
@@ -192,16 +198,19 @@ amountInput.addEventListener('keydown', (e) => {
 
 // Event Listeners (Sekarang calculate tidak fetch internet)
 amountInput.addEventListener('input', () => {
+    localStorage.setItem('kurs_amount', amountInput.value);
     updateFontSize(amountInput, amountInput.value);
     calculate();
 });
 
 fromCurrencySelect.addEventListener('change', () => {
+    localStorage.setItem('kurs_from', fromCurrencySelect.value);
     updateCurrencyDisplay();
     fetchExchangeData();
 });
 
 toCurrencySelect.addEventListener('change', () => {
+    localStorage.setItem('kurs_to', toCurrencySelect.value);
     updateCurrencyDisplay();
     fetchExchangeData();
 });
@@ -210,6 +219,9 @@ swapBtn.addEventListener('click', () => {
     const temp = fromCurrencySelect.value;
     fromCurrencySelect.value = toCurrencySelect.value;
     toCurrencySelect.value = temp;
+    
+    localStorage.setItem('kurs_from', fromCurrencySelect.value);
+    localStorage.setItem('kurs_to', toCurrencySelect.value);
     
     updateCurrencyDisplay();
     fetchExchangeData();

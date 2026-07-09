@@ -114,10 +114,21 @@ function calculateTrading() {
     });
     
     input.addEventListener('input', () => {
+        localStorage.setItem('trade_buyUsd', buyUsdAmountInput.value);
+        localStorage.setItem('trade_buyPrice', buyPriceInput.value);
+        localStorage.setItem('trade_sellBtc', sellBtcAmountInput.value);
+        localStorage.setItem('trade_sellPrice', sellPriceInput.value);
+
         updateFontSize(input, input.value);
         calculateTrading();
     });
 });
+
+// Load dari Cache jika ada
+if (localStorage.getItem('trade_buyUsd')) buyUsdAmountInput.value = localStorage.getItem('trade_buyUsd');
+if (localStorage.getItem('trade_buyPrice')) buyPriceInput.value = localStorage.getItem('trade_buyPrice');
+if (localStorage.getItem('trade_sellBtc')) sellBtcAmountInput.value = localStorage.getItem('trade_sellBtc');
+if (localStorage.getItem('trade_sellPrice')) sellPriceInput.value = localStorage.getItem('trade_sellPrice');
 
 // Jalankan pertama kali
 calculateTrading();

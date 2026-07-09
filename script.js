@@ -1,4 +1,4 @@
-// script.js - Logika aplikasi dengan integrasi Chart.js
+// script.js - Logika aplikasi dengan integrasi Chart.js & Crypto (CoinGecko)
 
 // Elemen DOM
 const amountInput = document.getElementById('amount');
@@ -24,12 +24,19 @@ async function fetchCurrencies() {
     try {
         const response = await fetch('https://api.frankfurter.dev/v1/currencies');
         currenciesData = await response.json();
+        
+        // Tambahkan Kripto secara manual
+        currenciesData['BTC'] = 'Bitcoin';
+        currenciesData['ETH'] = 'Ethereum';
+        
         populateDropdowns();
         // Set default value
         fromCurrencySelect.value = 'USD';
         toCurrencySelect.value = 'IDR';
         updateCurrencyDisplay();
-        await calculate();
+        
+        // Ambil data kurs pertama kali
+        await fetchExchangeData();
     } catch (error) {
         console.error('Gagal mengambil daftar mata uang:', error);
         exchangeRateInfo.textContent = 'Gagal memuat mata uang. Periksa koneksi internet.';
@@ -62,7 +69,8 @@ const currencySymbols = {
     "USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "AUD": "A$", 
     "CAD": "C$", "CHF": "Fr", "CNY": "¥", "SEK": "kr", "NZD": "$", 
     "IDR": "Rp", "INR": "₹", "BRL": "R$", "RUB": "₽", "ZAR": "R",
-    "SGD": "S$", "HKD": "HK$", "MYR": "RM", "THB": "฿", "PHP": "₱"
+    "SGD": "S$", "HKD": "HK$", "MYR": "RM", "THB": "฿", "PHP": "₱",
+    "BTC": "₿", "ETH": "Ξ"
 };
 
 // Memperbarui teks dan simbol yang terlihat di UI
@@ -78,56 +86,86 @@ function updateCurrencyDisplay() {
 }
 
 // Memformat angka agar rapi (misal: 1000.5 -> 1.000,50)
-function formatNumber(num) {
+function formatNumber(num, isCrypto = false) {
     return new Intl.NumberFormat('id-ID', {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 4
+        maximumFractionDigits: isCrypto ? 10 : 4 // Diperpanjang 10 digit untuk kripto
     }).format(num);
 }
 
-// Menghitung konversi
-async function calculate() {
+// Menarik kurs API saat mata uang diubah
+async function fetchExchangeData() {
+    const from = fromCurrencySelect.value;
+    const to = toCurrencySelect.value;
+
+    const isCryptoFrom = from === 'BTC' || from === 'ETH';
+    const isCryptoTo = to === 'BTC' || to === 'ETH';
+    const isCryptoInvolved = isCryptoFrom || isCryptoTo;
+
+    if (from === to) {
+        currentRate = 1;
+        exchangeRateInfo.textContent = `1 ${from} = 1 ${to}`;
+        updateChartData(from, to);
+        calculate();
+        return;
+    }
+
+    try {
+        let dateString = '-';
+        if (isCryptoInvolved) {
+            // Logika API Fawazahmed0 (Anti Rate-Limit)
+            const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${from.toLowerCase()}.json`;
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Crypto API Error');
+            const data = await response.json();
+            
+            currentRate = data[from.toLowerCase()][to.toLowerCase()];
+            dateString = data.date ? `${data.date} (Live)` : 'Live';
+            
+        } else {
+            // Logika API Frankfurter (Fiat)
+            const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=${from}&symbols=${to}`);
+            if (!response.ok) throw new Error('Frankfurter API Error');
+            const data = await response.json();
+
+            currentRate = data.rates[to];
+            dateString = data.date;
+        }
+
+        // Tampilkan info rate dan tanggal
+        exchangeRateInfo.textContent = `1 ${from} = ${formatNumber(currentRate, isCryptoInvolved)} ${to}`;
+        lastUpdateSpan.textContent = dateString;
+        
+        // Update Grafik dan hitung ulang
+        updateChartData(from, to);
+        calculate();
+
+    } catch (error) {
+        console.error('Error saat menarik data kurs:', error);
+        resultDisplay.textContent = 'Error';
+    }
+}
+
+// Menghitung konversi seketika (saat ngetik)
+function calculate() {
     const amount = amountInput.value;
     const from = fromCurrencySelect.value;
     const to = toCurrencySelect.value;
+    const isCryptoInvolved = from === 'BTC' || from === 'ETH' || to === 'BTC' || to === 'ETH';
 
     if (amount === '' || isNaN(amount)) {
         resultDisplay.textContent = '0';
         return;
     }
 
-    if (from === to) {
-        resultDisplay.textContent = formatNumber(amount);
-        exchangeRateInfo.textContent = `1 ${from} = 1 ${to}`;
-        updateChartData(from, to);
-        return;
-    }
+    const convertedAmount = amount * currentRate;
 
-    try {
-        const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=${from}&symbols=${to}`);
-        if (!response.ok) throw new Error('API Error');
-        const data = await response.json();
-
-        currentRate = data.rates[to];
-        const convertedAmount = amount * currentRate;
-
-        // Tampilkan hasil dengan animasi fade
-        resultDisplay.textContent = formatNumber(convertedAmount);
-        resultDisplay.classList.remove('fade-update');
-        void resultDisplay.offsetWidth; // trigger reflow
-        resultDisplay.classList.add('fade-update');
-
-        // Tampilkan info rate dan tanggal
-        exchangeRateInfo.textContent = `1 ${from} = ${formatNumber(currentRate)} ${to}`;
-        lastUpdateSpan.textContent = data.date;
-        
-        // Update Grafik
-        updateChartData(from, to);
-
-    } catch (error) {
-        console.error('Error saat menghitung:', error);
-        resultDisplay.textContent = 'Error';
-    }
+    // Tampilkan hasil dengan animasi fade
+    resultDisplay.textContent = formatNumber(convertedAmount, isCryptoInvolved);
+    resultDisplay.classList.remove('fade-update');
+    void resultDisplay.offsetWidth; // trigger reflow
+    resultDisplay.classList.add('fade-update');
 }
 
 // Mencegah input huruf e, +, - pada input angka
@@ -137,17 +175,17 @@ amountInput.addEventListener('keydown', (e) => {
     }
 });
 
-// Event Listeners
+// Event Listeners (Sekarang calculate tidak fetch internet)
 amountInput.addEventListener('input', calculate);
 
 fromCurrencySelect.addEventListener('change', () => {
     updateCurrencyDisplay();
-    calculate();
+    fetchExchangeData();
 });
 
 toCurrencySelect.addEventListener('change', () => {
     updateCurrencyDisplay();
-    calculate();
+    fetchExchangeData();
 });
 
 swapBtn.addEventListener('click', () => {
@@ -156,7 +194,7 @@ swapBtn.addEventListener('click', () => {
     toCurrencySelect.value = temp;
     
     updateCurrencyDisplay();
-    calculate();
+    fetchExchangeData();
 });
 
 // --- FITUR GRAFIK (CHART.JS) ---
@@ -167,24 +205,56 @@ function getPastDate(days) {
     return d.toISOString().split('T')[0]; // Format YYYY-MM-DD
 }
 
+function formatDateToShort(dateString) {
+    const date = new Date(dateString);
+    return `${date.getDate()} ${date.toLocaleString('id-ID', { month: 'short' })}`; // Misal "15 Jul"
+}
+
 async function updateChartData(from, to) {
     if (from === to) {
-        // Jika mata uang sama, kosongkan atau gambar garis lurus
         renderChart([], []);
         return;
     }
 
-    const startDate = getPastDate(30);
-    // API Frankfurter menggunakan /v1/ untuk endpoint rentang waktu
-    const url = `https://api.frankfurter.dev/v1/${startDate}..?base=${from}&symbols=${to}`;
-    
+    const isCryptoFrom = from === 'BTC' || from === 'ETH';
+    const isCryptoTo = to === 'BTC' || to === 'ETH';
+    const isCryptoInvolved = isCryptoFrom || isCryptoTo;
+
     try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Chart API Error');
-        const data = await response.json();
-        
-        const labels = Object.keys(data.rates); // Tanggal
-        const values = labels.map(date => data.rates[date][to]); // Nilai kurs
+        let labels = [];
+        let values = [];
+
+        if (isCryptoInvolved) {
+            const coinIdMap = { 'BTC': 'bitcoin', 'ETH': 'ethereum' };
+            let id = coinIdMap[from] || coinIdMap[to];
+            let vs = isCryptoFrom ? (isCryptoTo ? coinIdMap[to] : to.toLowerCase()) : from.toLowerCase();
+            
+            const url = `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=${vs}&days=30&interval=daily`;
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Chart API Error');
+            const data = await response.json();
+            
+            data.prices.forEach(point => {
+                labels.push(formatDateToShort(point[0]));
+                
+                if (!isCryptoFrom && isCryptoTo) {
+                    values.push(1 / point[1]); // Jika Fiat ke Kripto, balik angkanya
+                } else {
+                    values.push(point[1]);
+                }
+            });
+        } else {
+            const startDate = getPastDate(30);
+            const url = `https://api.frankfurter.dev/v1/${startDate}..?base=${from}&symbols=${to}`;
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Chart API Error');
+            const data = await response.json();
+            
+            labels = Object.keys(data.rates).map(dateStr => formatDateToShort(dateStr));
+            values = Object.keys(data.rates).map(dateStr => data.rates[dateStr][to]);
+        }
         
         renderChart(labels, values);
     } catch (error) {

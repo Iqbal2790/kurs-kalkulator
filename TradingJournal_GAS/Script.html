@@ -1,22 +1,23 @@
 <script>
-// Elemen DOM Input
+// State
+let globalTotalBtc = 0;
+let globalAvgPrice = 0;
+let currentAction = 'beli'; // 'beli' atau 'jual'
+
+// DOM Elements
 const buyUsdAmountInput = document.getElementById('buyUsdAmount');
 const buyPriceInput = document.getElementById('buyPrice');
+const buyBtcAmountDisplay = document.getElementById('buyBtcAmount');
+
 const sellPercentageSlider = document.getElementById('sellPercentageSlider');
 const sellPriceInput = document.getElementById('sellPrice');
-
-// Elemen DOM Teks/Hasil
-const buyBtcAmountDisplay = document.getElementById('buyBtcAmount');
 const sellPercentageText = document.getElementById('sellPercentageText');
 const sellBtcAmountDisplay = document.getElementById('sellBtcAmountDisplay');
 const sellUsdAmountDisplay = document.getElementById('sellUsdAmountDisplay');
 
 const pnlAmountDisplay = document.getElementById('pnlAmount');
 const pnlPercentageDisplay = document.getElementById('pnlPercentage');
-const totalInvestmentDisplay = document.getElementById('totalInvestment');
-const totalReturnDisplay = document.getElementById('totalReturn');
 
-// Elemen DOM Jurnal
 const saveJournalBtn = document.getElementById('saveJournalBtn');
 const tradeNotes = document.getElementById('tradeNotes');
 const saveStatus = document.getElementById('saveStatus');
@@ -46,32 +47,164 @@ function updateFontSize(element, text) {
     if (len > 18) {
         element.style.fontSize = 'clamp(1.5rem, 3vw, 2rem)';
     } else if (len > 12) {
-        element.style.fontSize = 'clamp(2rem, 4.5vw, 2.8rem)';
+        element.style.fontSize = 'clamp(2rem, 4.5vw, 2.5rem)';
     } else if (len > 8) {
-        element.style.fontSize = 'clamp(2.5rem, 5.5vw, 3.5rem)';
+        element.style.fontSize = 'clamp(2.2rem, 5vw, 3rem)';
     } else {
         element.style.fontSize = ''; // fallback
     }
 }
 
-// Fungsi Menghitung Profit/Loss
-function calculateTrading() {
+// Inisialisasi awal saat load
+function init() {
+    // Set default date ke jam sekarang (local)
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('buyDate').value = now.toISOString().slice(0,16);
+    document.getElementById('sellDate').value = now.toISOString().slice(0,16);
+    
+    // Tarik data portfolio dari database Google Sheets
+    fetchPortfolio();
+    
+    // Hitung form awal Beli
+    calculateBuy();
+}
+
+// Navigasi Tab Utama
+function switchTab(tab) {
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    
+    if (tab === 'trade') {
+        document.querySelector('.nav-links span:nth-child(1)').classList.add('active');
+        document.getElementById('tradeView').style.display = 'flex';
+        document.getElementById('historyView').style.display = 'none';
+        fetchPortfolio(); // Refresh data saldo di kalkulator
+    } else {
+        document.querySelector('.nav-links span:nth-child(2)').classList.add('active');
+        document.getElementById('tradeView').style.display = 'none';
+        document.getElementById('historyView').style.display = 'block';
+        fetchPortfolio(); // Refresh tabel histori
+    }
+}
+
+// Navigasi Aksi Trade
+function switchAction(action) {
+    currentAction = action;
+    document.getElementById('tabBeli').classList.remove('active');
+    document.getElementById('tabJual').classList.remove('active');
+    
+    if (action === 'beli') {
+        document.getElementById('tabBeli').classList.add('active');
+        document.getElementById('formBeli').style.display = 'block';
+        document.getElementById('formJual').style.display = 'none';
+        document.getElementById('pnlPanel').style.display = 'none';
+        saveJournalBtn.textContent = 'Catat Pembelian';
+        saveJournalBtn.style.background = 'var(--accent-yellow)';
+        calculateBuy();
+    } else {
+        document.getElementById('tabJual').classList.add('active');
+        document.getElementById('formBeli').style.display = 'none';
+        document.getElementById('formJual').style.display = 'block';
+        document.getElementById('pnlPanel').style.display = 'block';
+        saveJournalBtn.textContent = 'Catat Penjualan';
+        saveJournalBtn.style.background = '#4caf50'; // Warna hijau untuk profit action
+        saveJournalBtn.style.color = '#fff';
+        calculateSell();
+    }
+}
+
+// Menarik data saldo BTC dari backend Google Sheets
+function fetchPortfolio() {
+    document.getElementById('portfolioBtc').textContent = "Loading...";
+    document.getElementById('portfolioAvgPrice').textContent = "...";
+    
+    google.script.run
+        .withSuccessHandler((response) => {
+            if (response.success) {
+                globalTotalBtc = response.totalBtc;
+                globalAvgPrice = response.avgPrice;
+                
+                document.getElementById('portfolioBtc').textContent = `${globalTotalBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
+                document.getElementById('portfolioAvgPrice').textContent = formatMoney(globalAvgPrice);
+                
+                renderHistoryTable(response.history);
+                
+                // Recalculate sell if currently on sell tab
+                if (currentAction === 'jual') {
+                    calculateSell();
+                }
+            } else {
+                console.error(response.message);
+                document.getElementById('portfolioBtc').textContent = "ERROR";
+                if (response.message.includes('SHEET_ID')) {
+                   alert("Halo! Anda belum memasukkan SHEET_ID di file Code.gs. Silakan ikuti panduan deploy.");
+                }
+            }
+        })
+        .withFailureHandler((error) => console.error(error))
+        .getPortfolio();
+}
+
+// Render data tabel riwayat
+function renderHistoryTable(history) {
+    const tbody = document.getElementById('historyTableBody');
+    if (history.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px;">Belum ada riwayat transaksi.</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    history.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        // Format Teks PnL
+        let pnlText = '-';
+        if (item.type === 'Jual') {
+           const pnlClass = parseFloat(item.pnlPct) >= 0 ? 'text-green' : 'text-red';
+           pnlText = `<span class="${pnlClass}">${item.pnlUsd}<br>(${item.pnlPct}%)</span>`;
+        }
+        
+        const typeClass = item.type === 'Beli' ? 'type-beli' : 'type-jual';
+        const qtyPrefix = item.type === 'Beli' ? '+' : '-'; // Jual sebenarnya minus, kita pastikan tampil minus
+        const displayQty = Math.abs(parseFloat(item.btcQty)).toLocaleString('en-US', {maximumFractionDigits: 8});
+        
+        tr.innerHTML = `
+            <td>${item.date.split(' ')[0]}<br><small style="color:var(--text-secondary)">${item.date.split(' ')[1] || ''}</small></td>
+            <td class="${typeClass}">${item.type}</td>
+            <td>${formatMoney(item.btcPrice)}</td>
+            <td>${qtyPrefix}${displayQty}</td>
+            <td>${formatMoney(item.usdValue)}</td>
+            <td>${pnlText}</td>
+            <td style="max-width:200px; white-space:normal; font-size:0.85rem;">${item.notes}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Kalkulasi Form Beli Independen
+function calculateBuy() {
     const buyUsd = parseFloat(buyUsdAmountInput.value) || 0;
     const buyPrice = parseFloat(buyPriceInput.value) || 0;
+    const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
+    
+    buyBtcAmountDisplay.textContent = `${buyBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
+}
+
+// Kalkulasi Form Jual bergantung pada Saldo Portfolio (globalTotalBtc)
+function calculateSell() {
     const sellPercentage = parseFloat(sellPercentageSlider.value) || 0;
     const sellPrice = parseFloat(sellPriceInput.value) || 0;
 
-    const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
-    const sellBtc = buyBtc * (sellPercentage / 100);
+    // Hitung berdasarkan kuantitas asli di database
+    const sellBtc = globalTotalBtc * (sellPercentage / 100);
     const sellUsd = sellBtc * sellPrice;
 
     sellPercentageText.textContent = `${sellPercentage}%`;
-    buyBtcAmountDisplay.textContent = `${buyBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
     sellBtcAmountDisplay.textContent = `${sellBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
     sellUsdAmountDisplay.textContent = formatMoney(sellUsd);
 
-    const costOfSoldBtc = sellBtc * buyPrice;
-    
+    // Hitung PnL berdasarkan modal rata-rata
+    const costOfSoldBtc = sellBtc * globalAvgPrice;
     const pnlAmount = sellUsd - costOfSoldBtc;
     
     let pnlPercentage = 0;
@@ -82,8 +215,6 @@ function calculateTrading() {
     const sign = pnlAmount >= 0 ? '+' : '';
     pnlAmountDisplay.textContent = `${sign}${formatMoney(pnlAmount)}`;
     pnlPercentageDisplay.textContent = `${sign}${pnlPercentage.toFixed(2)}%`;
-    totalInvestmentDisplay.textContent = formatMoney(costOfSoldBtc); 
-    totalReturnDisplay.textContent = formatMoney(sellUsd); 
 
     updateFontSize(pnlAmountDisplay, pnlAmountDisplay.textContent);
     updateFontSize(pnlPercentageDisplay, pnlPercentageDisplay.textContent);
@@ -99,81 +230,87 @@ function calculateTrading() {
     void pnlAmountDisplay.offsetWidth;
 }
 
-[buyUsdAmountInput, buyPriceInput, sellPercentageSlider, sellPriceInput].forEach(input => {
-    if (input.type === 'number') {
-        input.addEventListener('keydown', (e) => {
-            if (['e', 'E', '+', '-'].includes(e.key)) {
-                e.preventDefault();
-            }
-        });
-    }
-    
+// Event Listeners Input
+[buyUsdAmountInput, buyPriceInput].forEach(input => {
     input.addEventListener('input', () => {
-        localStorage.setItem('trade_buyUsd', buyUsdAmountInput.value);
-        localStorage.setItem('trade_buyPrice', buyPriceInput.value);
-        localStorage.setItem('trade_sellPercentage', sellPercentageSlider.value);
-        localStorage.setItem('trade_sellPrice', sellPriceInput.value);
-
-        if (input.type === 'number') {
-            updateFontSize(input, input.value);
-        }
-        calculateTrading();
+        updateFontSize(input, input.value);
+        calculateBuy();
     });
 });
 
-if (localStorage.getItem('trade_buyUsd')) buyUsdAmountInput.value = localStorage.getItem('trade_buyUsd');
-if (localStorage.getItem('trade_buyPrice')) buyPriceInput.value = localStorage.getItem('trade_buyPrice');
-if (localStorage.getItem('trade_sellPercentage')) sellPercentageSlider.value = localStorage.getItem('trade_sellPercentage');
-if (localStorage.getItem('trade_sellPrice')) sellPriceInput.value = localStorage.getItem('trade_sellPrice');
+[sellPercentageSlider, sellPriceInput].forEach(input => {
+    input.addEventListener('input', () => {
+        if(input.type === 'number') updateFontSize(input, input.value);
+        calculateSell();
+    });
+});
 
-calculateTrading();
-
-
-// --- FUNGSI SIMPAN KE JURNAL (GOOGLE SHEETS) ---
+// Event Listener Tombol Simpan
 saveJournalBtn.addEventListener('click', () => {
     saveJournalBtn.disabled = true;
     saveJournalBtn.style.opacity = '0.5';
     saveStatus.textContent = 'Menyimpan...';
     saveStatus.style.color = 'var(--text-secondary)';
 
-    const buyUsd = parseFloat(buyUsdAmountInput.value) || 0;
-    const buyPrice = parseFloat(buyPriceInput.value) || 0;
-    const sellPercentage = parseFloat(sellPercentageSlider.value) || 0;
-    const sellPrice = parseFloat(sellPriceInput.value) || 0;
+    let tradeData = {};
     
-    const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
-    const sellBtc = buyBtc * (sellPercentage / 100);
-    const sellUsd = sellBtc * sellPrice;
-    const costOfSoldBtc = sellBtc * buyPrice;
-    
-    const pnlAmount = sellUsd - costOfSoldBtc;
-    let pnlPercentage = 0;
-    if (costOfSoldBtc > 0) {
-        pnlPercentage = (pnlAmount / costOfSoldBtc) * 100;
-    }
+    if (currentAction === 'beli') {
+        const rawDate = document.getElementById('buyDate').value;
+        const buyUsd = parseFloat(buyUsdAmountInput.value) || 0;
+        const buyPrice = parseFloat(buyPriceInput.value) || 0;
+        const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
+        
+        tradeData = {
+            date: rawDate ? rawDate.replace('T', ' ') + ':00' : '',
+            type: 'Beli',
+            usdValue: buyUsd,
+            btcPrice: buyPrice,
+            btcQty: buyBtc,
+            notes: tradeNotes.value
+        };
+    } else {
+        // Logika Jual
+        if (globalTotalBtc <= 0) {
+            alert("Saldo BTC Anda kosong! Tidak bisa melakukan penjualan.");
+            resetSaveButton();
+            return;
+        }
 
-    const tradeData = {
-        buyUsd: buyUsd,
-        buyPrice: buyPrice,
-        sellPercentage: sellPercentage,
-        sellPrice: sellPrice,
-        pnlUsd: pnlAmount,
-        pnlPercentage: pnlPercentage,
-        notes: tradeNotes.value
-    };
+        const rawDate = document.getElementById('sellDate').value;
+        const sellPercentage = parseFloat(sellPercentageSlider.value) || 0;
+        const sellPrice = parseFloat(sellPriceInput.value) || 0;
+        
+        const sellBtc = globalTotalBtc * (sellPercentage / 100);
+        const sellUsd = sellBtc * sellPrice;
+        
+        const costOfSoldBtc = sellBtc * globalAvgPrice;
+        const pnlAmount = sellUsd - costOfSoldBtc;
+        const pnlPercentage = costOfSoldBtc > 0 ? (pnlAmount / costOfSoldBtc) * 100 : 0;
+        
+        tradeData = {
+            date: rawDate ? rawDate.replace('T', ' ') + ':00' : '',
+            type: 'Jual',
+            usdValue: sellUsd,    // Nilai uang yang masuk
+            btcPrice: sellPrice,
+            btcQty: -sellBtc,     // Minus karena saldo berkurang
+            pnlUsd: pnlAmount >= 0 ? `+${pnlAmount.toFixed(2)}` : pnlAmount.toFixed(2),
+            pnlPct: pnlAmount >= 0 ? `+${pnlPercentage.toFixed(2)}` : pnlPercentage.toFixed(2),
+            notes: tradeNotes.value
+        };
+    }
 
     // Panggil fungsi Code.gs
     google.script.run
         .withSuccessHandler((response) => {
-            saveJournalBtn.disabled = false;
-            saveJournalBtn.style.opacity = '1';
-            
+            resetSaveButton();
             if (response.success) {
-                saveStatus.textContent = '✅ Berhasil disimpan ke Jurnal!';
+                saveStatus.textContent = '✅ Berhasil dicatat ke Ledger!';
                 saveStatus.style.color = '#4caf50';
-                tradeNotes.value = ''; // Reset notes field
+                tradeNotes.value = ''; // Reset notes
                 
-                // Hapus pesan setelah 3 detik
+                // Segarkan data portfolio otomatis
+                fetchPortfolio();
+                
                 setTimeout(() => { saveStatus.textContent = ''; }, 3000);
             } else {
                 saveStatus.textContent = '❌ Gagal: ' + response.message;
@@ -181,12 +318,19 @@ saveJournalBtn.addEventListener('click', () => {
             }
         })
         .withFailureHandler((error) => {
-            saveJournalBtn.disabled = false;
-            saveJournalBtn.style.opacity = '1';
+            resetSaveButton();
             saveStatus.textContent = '❌ Error jaringan / server!';
             saveStatus.style.color = '#f44336';
             console.error(error);
         })
-        .saveTrade(tradeData);
+        .saveTransaction(tradeData);
 });
+
+function resetSaveButton() {
+    saveJournalBtn.disabled = false;
+    saveJournalBtn.style.opacity = '1';
+}
+
+// Mulai aplikasi
+init();
 </script>

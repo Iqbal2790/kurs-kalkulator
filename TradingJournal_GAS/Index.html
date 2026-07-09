@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Journal</title>
+    <title>Trading Journal - Portfolio</title>
     <!-- Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,8 @@
     <!-- Theme Toggle & Navigation -->
     <div class="header-controls" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; max-width: 1000px; margin: 0 auto; width: 100%;">
         <div class="nav-links">
-            <span class="nav-link active">Trading Journal</span>
+            <span class="nav-link active" onclick="switchTab('trade')" style="cursor:pointer;">Trading</span>
+            <span class="nav-link" onclick="switchTab('history')" style="cursor:pointer;">Riwayat</span>
         </div>
         <button id="themeToggle" class="theme-btn" aria-label="Ganti Tema">
             <span class="icon-sun">
@@ -28,23 +29,44 @@
         </button>
     </div>
 
-    <div class="app-container">
-        <!-- Seksi Kiri: Kalkulator -->
+    <!-- VIEW 1: TRADING (Beli & Jual) -->
+    <div id="tradeView" class="app-container">
+        <!-- Seksi Kiri: Kalkulator & Form -->
         <main class="calculator-panel">
             
-            <!-- SECTION BELI -->
-            <div class="trade-section" style="margin-bottom: 40px;">
-                <h4 style="margin-bottom: 20px; color: var(--text-secondary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #4caf50;">●</span> Beli (Buy)
-                </h4>
+            <!-- PORTFOLIO SAAT INI -->
+            <div class="trade-section" style="margin-bottom: 20px; background: var(--surface-glass); border: 1px solid var(--border-glass); padding: 20px; border-radius: 16px;">
+                <h4 style="margin-bottom: 15px; color: var(--text-primary); font-size: 1.1rem;">Portfolio Saat Ini</h4>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Total Saldo BTC</div>
+                        <div id="portfolioBtc" style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary); font-family: 'Space Grotesk', sans-serif;">Loading...</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Harga Rata-rata (DCA)</div>
+                        <div id="portfolioAvgPrice" style="font-size: 1.2rem; font-weight: 600; color: var(--text-primary); font-family: 'Space Grotesk', sans-serif;">...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABS AKSI BELI / JUAL -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button id="tabBeli" class="action-tab active" onclick="switchAction('beli')">Beli (Tambah Saldo)</button>
+                <button id="tabJual" class="action-tab" onclick="switchAction('jual')">Jual (Realisasi Profit)</button>
+            </div>
+
+            <!-- FORM BELI -->
+            <div id="formBeli" class="trade-section">
+                <div class="amount-section" style="margin-bottom: 20px;">
+                    <div class="section-label">Tanggal Pembelian</div>
+                    <input type="datetime-local" id="buyDate" class="styled-input">
+                </div>
                 
                 <div class="amount-section" style="margin-bottom: 20px;">
-                    <div class="section-label">Beli USD (Modal)</div>
+                    <div class="section-label">Modal Pembelian</div>
                     <div class="input-row">
                         <input type="number" id="buyUsdAmount" value="1000" min="0" step="any">
-                        <div class="currency-selector">
-                            <div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div>
-                        </div>
+                        <div class="currency-selector"><div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div></div>
                     </div>
                 </div>
 
@@ -52,22 +74,21 @@
                     <div class="section-label">Di Harga 1 BTC/USD</div>
                     <div class="input-row">
                         <input type="number" id="buyPrice" value="60000" min="0" step="any">
-                        <div class="currency-selector">
-                            <div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div>
-                        </div>
+                        <div class="currency-selector"><div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div></div>
                     </div>
                     <div style="margin-top: 10px; font-size: 0.95rem; color: var(--text-secondary);">
-                        Mendapatkan: <span id="buyBtcAmount" style="font-weight: 600; color: var(--text-primary);">0 BTC</span>
+                        Kuantitas yang didapat: <span id="buyBtcAmount" style="font-weight: 600; color: var(--text-primary);">0 BTC</span>
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION JUAL -->
-            <div class="trade-section">
-                <h4 style="margin-bottom: 20px; color: var(--text-secondary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #f44336;">●</span> Jual (Sell)
-                </h4>
-                
+            <!-- FORM JUAL -->
+            <div id="formJual" class="trade-section" style="display: none;">
+                <div class="amount-section" style="margin-bottom: 20px;">
+                    <div class="section-label">Tanggal Penjualan</div>
+                    <input type="datetime-local" id="sellDate" class="styled-input">
+                </div>
+
                 <div class="amount-section" style="margin-bottom: 25px;">
                     <div class="section-label" style="display: flex; justify-content: space-between; width: 100%;">
                         <span>Porsi Kuantitas yang Dijual</span>
@@ -76,15 +97,11 @@
                     <div class="slider-wrapper" style="margin-top: 25px; padding: 0 10px;">
                         <input type="range" id="sellPercentageSlider" min="0" max="100" value="100" step="1">
                         <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">
-                            <span>0%</span>
-                            <span>25%</span>
-                            <span>50%</span>
-                            <span>75%</span>
-                            <span>100%</span>
+                            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
                         </div>
                     </div>
                     <div style="margin-top: 15px; font-size: 0.95rem; color: var(--text-secondary);">
-                        Akan dijual: <span id="sellBtcAmountDisplay" style="font-weight: 600; color: var(--text-primary);">0 BTC</span>
+                        Kuantitas akan dijual: <span id="sellBtcAmountDisplay" style="font-weight: 600; color: var(--text-primary);">0 BTC</span>
                     </div>
                 </div>
 
@@ -92,9 +109,7 @@
                     <div class="section-label">Di Harga 1 BTC/USD</div>
                     <div class="input-row">
                         <input type="number" id="sellPrice" value="66000" min="0" step="any">
-                        <div class="currency-selector">
-                            <div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div>
-                        </div>
+                        <div class="currency-selector"><div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div></div>
                     </div>
                     <div style="margin-top: 10px; font-size: 0.95rem; color: var(--text-secondary);">
                         Hasil Penjualan: <span id="sellUsdAmountDisplay" style="font-weight: 600; color: var(--text-primary);">$0.00</span>
@@ -106,36 +121,65 @@
 
         <!-- Seksi Kanan: Hasil Profit & Form Jurnal -->
         <aside class="chart-panel" style="display: flex; flex-direction: column; justify-content: flex-start; gap: 20px;">
-            <div class="chart-header">
-                <h3>Hasil Trading</h3>
-            </div>
-            <div class="result-summary">
-                <div class="summary-item">
-                    <span class="summary-label">Keuntungan / Kerugian</span>
-                    <div id="pnlAmount" class="result-display text-green">+$5,000.00</div>
+            
+            <!-- PANEL PROFIT (Hanya muncul saat Jual) -->
+            <div id="pnlPanel" style="display: none;">
+                <div class="chart-header">
+                    <h3>Estimasi Profit Penjualan</h3>
                 </div>
-                <div class="summary-item" style="margin-top: 20px;">
-                    <span class="summary-label">Persentase</span>
-                    <div id="pnlPercentage" class="result-display text-green">+8.33%</div>
+                <div class="result-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Keuntungan / Kerugian</span>
+                        <div id="pnlAmount" class="result-display text-green">+$0.00</div>
+                    </div>
+                    <div class="summary-item" style="margin-top: 20px;">
+                        <span class="summary-label">Persentase</span>
+                        <div id="pnlPercentage" class="result-display text-green">+0.00%</div>
+                    </div>
                 </div>
-            </div>
-            <div class="info-footer" style="margin-top: 10px; padding-top: 20px; border-top: 1px solid var(--border-glass);">
-                <p class="rate-info">Total Modal: <span id="totalInvestment" style="font-weight: 600;">$0.00</span></p>
-                <p class="rate-info">Total Penjualan: <span id="totalReturn" style="font-weight: 600;">$0.00</span></p>
+                <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary);">
+                    *Dihitung berdasarkan Harga Beli Rata-rata Portfolio.
+                </div>
             </div>
 
             <!-- Tambahan Form Jurnal -->
             <div class="journal-section" style="margin-top: 15px;">
-                <h4 style="margin-bottom: 10px; color: var(--text-secondary); font-size: 0.95rem;">Catatan Jurnal</h4>
-                <textarea id="tradeNotes" placeholder="Alasan entry/exit, emosi saat trading, dsb..." style="width: 100%; height: 80px; padding: 12px; border-radius: 12px; border: 1px solid var(--border-glass); background: var(--surface-glass); color: var(--text-primary); font-family: 'Inter', sans-serif; resize: vertical; outline: none; margin-bottom: 15px; font-size: 0.9rem;"></textarea>
+                <h4 style="margin-bottom: 10px; color: var(--text-secondary); font-size: 0.95rem;">Catatan Transaksi</h4>
+                <textarea id="tradeNotes" placeholder="Alasan membeli, alasan menjual, sentimen pasar..." style="width: 100%; height: 80px; padding: 12px; border-radius: 12px; border: 1px solid var(--border-glass); background: var(--surface-glass); color: var(--text-primary); font-family: 'Inter', sans-serif; resize: vertical; outline: none; margin-bottom: 15px; font-size: 0.9rem;"></textarea>
                 
                 <button id="saveJournalBtn" style="width: 100%; background: var(--accent-yellow); border: none; border-radius: 12px; padding: 15px; font-weight: 600; color: #1a1a1a; cursor: pointer; transition: opacity 0.2s;">
-                    Simpan ke Google Sheets
+                    Catat Pembelian
                 </button>
                 <div id="saveStatus" style="margin-top: 10px; font-size: 0.85rem; text-align: center; font-weight: 500;"></div>
             </div>
         </aside>
+    </div>
 
+    <!-- VIEW 2: HISTORY / RIWAYAT -->
+    <div id="historyView" class="app-container" style="display: none; max-width: 1000px; width: 100%;">
+        <div class="trade-section" style="width: 100%; overflow-x: auto; padding: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: var(--text-primary); font-size: 1.3rem;">Buku Jurnal (Ledger)</h3>
+                <button onclick="fetchPortfolio()" style="padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border-glass); background: var(--surface-glass); color: var(--text-primary); cursor: pointer;">Segarkan Data</button>
+            </div>
+            
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Tipe</th>
+                        <th>Harga BTC/USD</th>
+                        <th>Kuantitas</th>
+                        <th>Nilai USD</th>
+                        <th>PnL</th>
+                        <th>Catatan</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr><td colspan="7" style="text-align: center; padding: 30px;">Memuat data riwayat dari database...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Load JS -->

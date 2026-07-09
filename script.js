@@ -134,7 +134,7 @@ async function fetchExchangeData() {
         }
 
         // Tampilkan info rate dan tanggal
-        exchangeRateInfo.textContent = `1 ${from} = ${formatNumber(currentRate, isCryptoInvolved)} ${to}`;
+        exchangeRateInfo.textContent = `1 ${from} = ${formatNumber(currentRate, isCryptoTo)} ${to}`;
         lastUpdateSpan.textContent = dateString;
         
         // Update Grafik dan hitung ulang
@@ -152,7 +152,7 @@ function calculate() {
     const amount = amountInput.value;
     const from = fromCurrencySelect.value;
     const to = toCurrencySelect.value;
-    const isCryptoInvolved = from === 'BTC' || from === 'ETH' || to === 'BTC' || to === 'ETH';
+    const isCryptoTo = to === 'BTC' || to === 'ETH';
 
     if (amount === '' || isNaN(amount)) {
         resultDisplay.textContent = '0';
@@ -162,7 +162,7 @@ function calculate() {
     const convertedAmount = amount * currentRate;
 
     // Tampilkan hasil dengan animasi fade
-    resultDisplay.textContent = formatNumber(convertedAmount, isCryptoInvolved);
+    resultDisplay.textContent = formatNumber(convertedAmount, isCryptoTo);
     resultDisplay.classList.remove('fade-update');
     void resultDisplay.offsetWidth; // trigger reflow
     resultDisplay.classList.add('fade-update');

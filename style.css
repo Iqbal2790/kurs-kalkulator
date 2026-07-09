@@ -99,6 +99,39 @@ body {
 [data-theme="dark"] .theme-btn .icon-sun { opacity: 0.3; color: var(--text-primary); }
 [data-theme="dark"] .theme-btn .icon-moon { opacity: 1; color: #ffffff; } /* warna putih untuk bulan */
 
+/* Theme Toggle & Nav */
+.header-controls {
+    /* Style akan diatur secara inline di HTML */
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    background: var(--surface-glass);
+    padding: 5px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--text-primary);
+}
+
+.nav-link.active {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
 /* Container Utama */
 .app-container {
     display: flex;

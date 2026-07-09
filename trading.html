@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Kalkulator</title>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Theme Toggle & Navigation -->
+    <div class="header-controls" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; max-width: 1000px; margin: 0 auto; width: 100%;">
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Kurs Kalkulator</a>
+            <a href="trading.html" class="nav-link active">Trading Kalkulator</a>
+        </div>
+        <button id="themeToggle" class="theme-btn" aria-label="Ganti Tema">
+            <span class="icon-sun">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </span>
+            <span class="icon-moon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </span>
+        </button>
+    </div>
+
+    <div class="app-container">
+        <!-- Seksi Kiri: Kalkulator -->
+        <main class="calculator-panel">
+            
+            <!-- Jumlah Koin -->
+            <div class="amount-section">
+                <div class="section-label">
+                    <span class="arrow-icon">🪙</span> Jumlah Koin
+                </div>
+                <div class="input-row">
+                    <input type="number" id="coinAmount" value="1" min="0" step="any">
+                    <div class="currency-selector">
+                        <div class="selected-display">
+                            <span class="currency-symbol">₿</span>
+                            <span class="currency-code">BTC</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Harga Beli -->
+            <div class="amount-section">
+                <div class="section-label">
+                    <span class="arrow-icon">↙</span> Harga Beli (Buy)
+                </div>
+                <div class="input-row">
+                    <input type="number" id="buyPrice" value="60000" min="0" step="any">
+                    <div class="currency-selector">
+                        <div class="selected-display">
+                            <span class="currency-symbol">$</span>
+                            <span class="currency-code">USD</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Harga Jual -->
+            <div class="amount-section">
+                <div class="section-label">
+                    <span class="arrow-icon">↗</span> Harga Jual (Sell)
+                </div>
+                <div class="input-row">
+                    <input type="number" id="sellPrice" value="65000" min="0" step="any">
+                    <div class="currency-selector">
+                        <div class="selected-display">
+                            <span class="currency-symbol">$</span>
+                            <span class="currency-code">USD</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+
+        <!-- Seksi Kanan: Hasil Profit -->
+        <aside class="chart-panel" style="display: flex; flex-direction: column; justify-content: center; gap: 30px;">
+            <div class="chart-header">
+                <h3>Hasil Trading</h3>
+            </div>
+            <div class="result-summary">
+                <div class="summary-item">
+                    <span class="summary-label">Keuntungan / Kerugian</span>
+                    <div id="pnlAmount" class="result-display text-green">+$5,000.00</div>
+                </div>
+                <div class="summary-item" style="margin-top: 20px;">
+                    <span class="summary-label">Persentase</span>
+                    <div id="pnlPercentage" class="result-display text-green">+8.33%</div>
+                </div>
+            </div>
+            <div class="info-footer" style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-glass);">
+                <p class="rate-info">Total Modal: <span id="totalInvestment" style="font-weight: 600;">$60,000.00</span></p>
+                <p class="rate-info">Total Penjualan: <span id="totalReturn" style="font-weight: 600;">$65,000.00</span></p>
+            </div>
+        </aside>
+
+    </div>
+
+    <script src="trading.js"></script>
+</body>
+</html>

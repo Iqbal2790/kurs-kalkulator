@@ -150,9 +150,11 @@ async function fetchExchangeData() {
 function updateFontSize(element, text) {
     const len = text.length;
     if (len > 18) {
-        element.style.fontSize = '2rem';
+        element.style.fontSize = 'clamp(1.5rem, 3vw, 2rem)';
     } else if (len > 12) {
-        element.style.fontSize = '3rem';
+        element.style.fontSize = 'clamp(2rem, 4.5vw, 2.8rem)';
+    } else if (len > 8) {
+        element.style.fontSize = 'clamp(2.5rem, 5.5vw, 3.5rem)';
     } else {
         element.style.fontSize = ''; // kembali ke ukuran default CSS
     }

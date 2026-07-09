@@ -1,341 +1,311 @@
-/* style.css - Tema "Dusk Exchange" */
+/* style.css - Tema Cerah & Minimalis ala Referensi Baru */
 
-/* 1. Reset Dasar & Variabel Tema */
+:root {
+    /* Palet Warna Terang (Default) */
+    --bg-base: #f4f6eb;
+    --bg-gradient: 
+        radial-gradient(at 80% 0%, hsla(60, 45%, 85%, 1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(140, 30%, 85%, 1) 0px, transparent 50%),
+        radial-gradient(at 80% 100%, hsla(45, 50%, 85%, 1) 0px, transparent 50%),
+        radial-gradient(at 0% 0%, hsla(85, 40%, 90%, 1) 0px, transparent 50%);
+    
+    --surface-glass: rgba(255, 255, 255, 0.4);
+    --surface-glass-strong: rgba(255, 255, 255, 0.6);
+    --border-glass: rgba(255, 255, 255, 0.5);
+    
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    
+    --accent-yellow: linear-gradient(90deg, #fceb69 0%, #d8e555 100%);
+    --btn-grey: rgba(0, 0, 0, 0.05);
+    
+    /* Ukuran Font */
+    --fs-display: clamp(3rem, 8vw, 4.5rem);
+    --fs-body: 1.1rem;
+    --fs-small: 0.9rem;
+}
+
+[data-theme="dark"] {
+    /* Palet Warna Gelap (Fallback) */
+    --bg-base: #1b1c19;
+    --bg-gradient: 
+        radial-gradient(at 80% 0%, hsla(60, 30%, 15%, 1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(140, 20%, 15%, 1) 0px, transparent 50%),
+        radial-gradient(at 80% 100%, hsla(45, 30%, 15%, 1) 0px, transparent 50%),
+        radial-gradient(at 0% 0%, hsla(85, 20%, 15%, 1) 0px, transparent 50%);
+    --surface-glass: rgba(0, 0, 0, 0.4);
+    --surface-glass-strong: rgba(0, 0, 0, 0.6);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    
+    --text-primary: #f0f0f0;
+    --text-secondary: #aaaaaa;
+    
+    --accent-yellow: linear-gradient(90deg, #d8cc54 0%, #b8c442 100%);
+    --btn-grey: rgba(255, 255, 255, 0.1);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-:root {
-    /* Warna Inti (Tidak Berubah) */
-    --color-amber: #F2B84B;
-    --color-amber-deep: #C8862A;
-    --color-indigo-deep: #161334;
-    --color-plum: #2D1B4E;
-    --color-mist: #EEF1FB;
-    --color-lavender: #E4DEFB;
-    --color-success: #3DBE8B;
-    --color-danger: #E2607A;
-
-    /* Skala Tipografi (Mobile-First dengan clamp) */
-    --fs-display: clamp(2rem, 8vw, 3rem);
-    --fs-heading: clamp(1.125rem, 4vw, 1.5rem);
-    --fs-body: 1rem;
-    --fs-caption: 0.8125rem;
-}
-
-/* Token Semantic untuk Mode Gelap (Dark Mode - Default) */
-[data-theme="dark"] {
-    --bg-gradient: radial-gradient(circle at 20% 0%, var(--color-plum), var(--color-indigo-deep) 60%);
-    --surface-glass: rgba(255, 255, 255, 0.06);
-    --surface-glass-strong: rgba(255, 255, 255, 0.10);
-    --border-glass: rgba(255, 255, 255, 0.14);
-    --text-primary: #F5F3FF;
-    --text-secondary: rgba(245, 243, 255, 0.64);
-    --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35);
-    
-    /* Variabel toggle button */
-    --toggle-bg: rgba(255, 255, 255, 0.1);
-    --toggle-pill: #F2B84B;
-    --toggle-pos: 32px;
-}
-
-/* Token Semantic untuk Mode Terang (Light Mode) */
-[data-theme="light"] {
-    --bg-gradient: radial-gradient(circle at 20% 0%, var(--color-lavender), var(--color-mist) 60%);
-    --surface-glass: rgba(255, 255, 255, 0.55);
-    --surface-glass-strong: rgba(255, 255, 255, 0.72);
-    --border-glass: rgba(255, 255, 255, 0.9);
-    --text-primary: #211A3D;
-    --text-secondary: rgba(33, 26, 61, 0.62);
-    --shadow-glass: 0 8px 32px rgba(45, 27, 78, 0.12);
-
-    /* Variabel toggle button */
-    --toggle-bg: rgba(0, 0, 0, 0.05);
-    --toggle-pill: #C8862A;
-    --toggle-pos: 4px;
-}
-
 body {
     font-family: 'Inter', sans-serif;
-    background: var(--bg-gradient);
-    background-attachment: fixed;
+    background-color: var(--bg-base);
+    background-image: var(--bg-gradient);
     color: var(--text-primary);
-    min-height: 100dvh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background 0.3s ease, color 0.3s ease;
-}
-
-.app-wrapper {
-    width: 100%;
-    max-width: 480px;
-    padding: 24px;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 24px;
-}
-
-/* 2. Header & Tema Toggle */
-.app-header {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    padding: 20px;
+    transition: background-color 0.3s ease, background-image 0.3s ease, color 0.3s ease;
 }
 
-.title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: var(--fs-heading);
-    font-weight: 700;
+/* Header & Toggle */
+.header-controls {
+    width: 100%;
+    max-width: 1000px; /* Lebih lebar untuk 2 kolom */
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
 }
 
-.theme-toggle {
-    position: relative;
-    width: 64px;
-    height: 32px;
-    border-radius: 999px;
-    background: var(--toggle-bg);
-    border: 1px solid var(--border-glass);
+.theme-btn {
+    background: transparent;
+    border: none;
+    padding: 8px 16px;
     cursor: pointer;
     display: flex;
+    gap: 12px;
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+.theme-btn:hover {
+    opacity: 0.8;
+}
+
+.theme-btn span {
+    display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 8px;
-    transition: background 0.3s;
 }
 
-.theme-icon {
-    font-size: 14px;
-    z-index: 1;
-}
+.theme-btn .icon-moon { opacity: 0.3; }
+.theme-btn .icon-sun { opacity: 1; color: #f5a623; } /* warna kuning matahari */
 
-.toggle-pill {
-    position: absolute;
-    top: 3px;
-    left: var(--toggle-pos);
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--toggle-pill);
-    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s;
-}
+[data-theme="dark"] .theme-btn .icon-sun { opacity: 0.3; color: var(--text-primary); }
+[data-theme="dark"] .theme-btn .icon-moon { opacity: 1; color: #ffffff; } /* warna putih untuk bulan */
 
-/* 3. Efek Glassmorphism Dasar */
-.glass-surface {
-    background: var(--surface-glass);
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid var(--border-glass);
-    border-radius: 28px;
-    box-shadow: var(--shadow-glass);
-    padding: 24px;
+/* Container Utama */
+.app-container {
     display: flex;
     flex-direction: column;
-    gap: 4px; /* Karena orb di tengah absolute */
-    position: relative; /* Untuk wadah absolut orb */
+    width: 100%;
+    max-width: 1000px;
+    gap: 30px;
 }
 
-/* Fallback jika browser tidak dukung blur */
-@supports not (backdrop-filter: blur(1px)) {
-    .glass-surface {
-        background: var(--surface-glass-strong);
+/* Di Desktop, bagi jadi 2 kolom */
+@media (min-width: 800px) {
+    .app-container {
+        flex-direction: row;
+        align-items: stretch;
+    }
+    .calculator-panel {
+        flex: 1;
+    }
+    .chart-panel {
+        flex: 1;
     }
 }
 
-/* 4. Panel Input & Hasil (Sub-Panel Kaca) */
-.calc-panel {
-    background: var(--surface-glass-strong);
-    border-radius: 20px;
-    padding: 20px 24px;
+/* Panel Kalkulator (Kiri) */
+.calculator-panel {
+    background: transparent;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    border: 1px solid transparent; /* Untuk animasi focus */
-    transition: border-color 0.2s, box-shadow 0.2s;
+    gap: 30px;
+    padding: 10px;
 }
 
-/* Saat input di dalam panel difokuskan */
-.calc-panel:focus-within {
-    border-color: var(--color-amber);
-    box-shadow: 0 0 0 3px rgba(242, 184, 75, 0.15);
+/* Seksi Input/Output */
+.amount-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-}
-
-/* Input Angka (Pakai font monospace Tabular) */
-input[type="number"], .result-number {
-    font-family: 'JetBrains Mono', monospace;
-    font-variant-numeric: tabular-nums;
-    font-size: var(--fs-display);
+.section-label {
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-weight: 500;
+}
+
+.arrow-icon {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Angka Besar */
+input[type="number"], .result-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: var(--fs-display);
+    font-weight: 600;
     color: var(--text-primary);
     background: transparent;
     border: none;
     outline: none;
     width: 100%;
-    min-width: 0; /* Mencegah overflow flex */
-}
-
-input[type="number"]::-webkit-inner-spin-button, 
-input[type="number"]::-webkit-outer-spin-button { 
-    -webkit-appearance: none; 
-    margin: 0; 
-}
-input[type="number"] {
+    text-align: left;
+    /* Hilangkan panah spinner bawaan browser */
     -moz-appearance: textfield;
 }
-
-.result-number {
-    word-break: break-all;
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
-/* Dropdown Mata Uang (Bentuk Chip) */
-.currency-chip {
-    width: 100%;
+.result-display {
+    overflow-wrap: break-word;
 }
 
-.currency-chip select {
-    appearance: none;
-    width: 100%;
-    background: var(--surface-glass);
-    color: var(--text-primary);
-    border: 1px solid var(--border-glass);
-    padding: 12px 36px 12px 16px;
-    border-radius: 12px; /* Disesuaikan agar lebih elegan saat panjang */
-    font-family: 'Inter', sans-serif;
+/* Dropdown Kustom dengan trik overlay */
+.currency-selector {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.selected-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: var(--fs-body);
-    font-weight: 500;
-    cursor: pointer;
-    outline: none;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    /* Panah panah bawah untuk dropdown */
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23F5F3FF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: transparent;
     transition: background 0.2s;
 }
 
-/* Ganti warna panah dropdown di mode terang */
-[data-theme="light"] .currency-chip select {
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23211A3D%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+.currency-selector:hover .selected-display {
+    background: var(--btn-grey);
 }
 
-.currency-chip select:hover {
-    background-color: var(--surface-glass-strong);
+.currency-symbol {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 400;
 }
 
-/* 5. Signature Element: Orb Swap Emas */
-.orb-container {
-    position: relative;
-    height: 12px; /* Memberi sedikit jarak antar panel agar orb pas di tengah */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-}
-
-.swap-orb {
+.hidden-select {
     position: absolute;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-amber), var(--color-amber-deep));
-    border: none;
-    color: #ffffff; /* Ikon selalu putih kontras */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; /* Sembunyikan tapi tetap bisa diklik */
     cursor: pointer;
+}
+
+/* Kontrol Swap & Settings */
+.controls-section {
     display: flex;
-    justify-content: center;
+    gap: 16px;
     align-items: center;
-    box-shadow: 0 4px 12px rgba(200, 134, 42, 0.4);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
 }
 
-.swap-orb:hover {
-    /* Animasi putar ketika mouse mendekat */
-    transform: rotate(180deg) scale(1.05);
-    box-shadow: 0 6px 16px rgba(200, 134, 42, 0.6);
+.swap-btn {
+    flex: 1; /* Ambil sisa ruang */
+    background: var(--accent-yellow);
+    border: none;
+    border-radius: 999px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1a1a1a;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(216, 229, 85, 0.3);
+    transition: transform 0.2s;
 }
 
-.swap-orb:active {
-    transform: rotate(180deg) scale(0.95);
+.swap-btn:active {
+    transform: scale(0.98);
 }
 
-/* 6. Footer Info Tanggal & Info Rate */
+.settings-btn {
+    width: 90px;
+    height: 64px;
+    border-radius: 999px;
+    background: var(--btn-grey);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.settings-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] .settings-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Footer info */
 .info-footer {
-    text-align: center;
-    margin-top: 16px;
+    margin-top: 10px;
+    text-align: left;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Panel Grafik (Kanan) */
+.chart-panel {
+    background: transparent;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    padding: 10px;
 }
 
-.rate-info {
-    font-family: 'JetBrains Mono', monospace;
+.chart-header h3 {
     font-size: var(--fs-body);
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-primary);
+    margin-bottom: 20px;
 }
 
-.date-info {
-    font-size: var(--fs-caption);
-    color: var(--text-secondary);
+.chart-container {
+    flex: 1;
+    width: 100%;
+    min-height: 250px;
+    position: relative;
 }
 
-/* 7. Animasi Render Teks (Muncul awal & saat ganti angka) */
-@media (prefers-reduced-motion: no-preference) {
-    /* Saat card muncul pertama kali */
-    .glass-surface {
-        animation: cardEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes cardEnter {
-        from {
-            opacity: 0;
-            transform: translateY(12px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Class tambahan untuk dipasang oleh JavaScript saat hasil selesai dihitung */
-    .fade-slide {
-        animation: fadeSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes fadeSlideUp {
-        from {
-            opacity: 0;
-            transform: translateY(4px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+/* Animasi */
+.fade-update {
+    animation: fadeUpdate 0.5s ease;
 }
 
-/* Menyesuaikan padding kalau layar cukup lebar */
-@media (min-width: 768px) {
-    .glass-surface {
-        padding: 32px;
-    }
-    .app-wrapper {
-        padding: 0;
-    }
+@keyframes fadeUpdate {
+    0% { opacity: 0; transform: translateY(5px); }
+    100% { opacity: 1; transform: translateY(0); }
 }

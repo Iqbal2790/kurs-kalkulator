@@ -1,77 +1,42 @@
-// script.js - File ini menangani logika aplikasi "Dusk Exchange"
+// script.js - Logika aplikasi dengan integrasi Chart.js
 
-// 1. Pemilihan Elemen DOM Baru
+// Elemen DOM
 const amountInput = document.getElementById('amount');
-const fromCurrencySelect = document.getElementById('from-currency');
-const toCurrencySelect = document.getElementById('to-currency');
-const swapBtn = document.getElementById('swap-btn');
-const conversionResultText = document.getElementById('conversion-result');
-const exchangeRateInfoText = document.getElementById('exchange-rate-info');
-const lastUpdateText = document.getElementById('last-update');
+const resultDisplay = document.getElementById('result');
+const fromCurrencySelect = document.getElementById('fromCurrency');
+const toCurrencySelect = document.getElementById('toCurrency');
+const fromCodeDisplay = document.getElementById('fromCodeDisplay');
+const toCodeDisplay = document.getElementById('toCodeDisplay');
+const fromSymbol = document.getElementById('fromSymbol');
+const toSymbol = document.getElementById('toSymbol');
+const swapBtn = document.getElementById('swapBtn');
+const exchangeRateInfo = document.getElementById('exchange-rate-info');
+const lastUpdateSpan = document.getElementById('last-update');
+const themeToggle = document.getElementById('themeToggle');
 
-// Elemen Toggle Tema
-const themeToggleBtn = document.getElementById('theme-toggle');
-const htmlTag = document.documentElement;
-
-// Caching API agar hemat kuota/request
+// State Aplikasi
 let currenciesData = {};
-let cachedRates = {};
+let currentRate = 0;
+let chartInstance = null;
 
-// Fungsi untuk mengganti tema (Terang / Gelap)
-function toggleTheme() {
-    const currentTheme = htmlTag.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    // Ubah atribut html untuk memicu perubahan CSS
-    htmlTag.setAttribute('data-theme', newTheme);
-    
-    // Simpan pilihan di browser memori
-    localStorage.setItem('theme', newTheme);
-}
-
-// Mengecek apakah sebelumnya pengguna pernah memilih tema di sesi sebelumnya
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme) {
-    htmlTag.setAttribute('data-theme', savedTheme);
-}
-themeToggleBtn.addEventListener('click', toggleTheme);
-
-// Fungsi format angka (pakai pemisah titik/koma)
-function formatCurrency(amount) {
-    // Memformat angka sesuai gaya Indonesia, tapi TANPA simbol uang 
-    // karena nama mata uang sudah ada di dropdown sampingnya.
-    return new Intl.NumberFormat('id-ID', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
-    }).format(amount);
-}
-
-// Memicu animasi "fade & slide" pada teks hasil (Sesuai DESIGN.md section 7)
-function triggerResultAnimation() {
-    // Menghapus dan menaruh kelas CSS berulang-ulang untuk memicu ulang animasinya
-    conversionResultText.classList.remove('fade-slide');
-    void conversionResultText.offsetWidth; // Trik ajaib JS untuk mereset animasi CSS
-    conversionResultText.classList.add('fade-slide');
-}
-
-// 2. Mengambil daftar SEMUA mata uang dari Frankfurter API (v1)
+// Mengambil daftar mata uang
 async function fetchCurrencies() {
     try {
         const response = await fetch('https://api.frankfurter.dev/v1/currencies');
-        if (!response.ok) throw new Error('Gagal memuat mata uang');
-        
         currenciesData = await response.json();
         populateDropdowns();
-        calculate();
-
+        // Set default value
+        fromCurrencySelect.value = 'USD';
+        toCurrencySelect.value = 'IDR';
+        updateCurrencyDisplay();
+        await calculate();
     } catch (error) {
-        console.error('Error:', error);
-        conversionResultText.textContent = "Error";
-        exchangeRateInfoText.textContent = "Gagal memuat info kurs.";
+        console.error('Gagal mengambil daftar mata uang:', error);
+        exchangeRateInfo.textContent = 'Gagal memuat mata uang. Periksa koneksi internet.';
     }
 }
 
-// 3. Memasukkan daftar mata uang ke dropdown tipe baru (chip)
+// Mengisi pilihan dropdown
 function populateDropdowns() {
     fromCurrencySelect.innerHTML = '';
     toCurrencySelect.innerHTML = '';
@@ -81,6 +46,7 @@ function populateDropdowns() {
         
         const optionFrom = document.createElement('option');
         optionFrom.value = currencyCode;
+        // Di dropdown asli yang muncul di sistem, kita tampilkan teks panjang
         optionFrom.textContent = `${currencyCode} - ${currencyName}`;
         fromCurrencySelect.appendChild(optionFrom);
 
@@ -89,84 +55,234 @@ function populateDropdowns() {
         optionTo.textContent = `${currencyCode} - ${currencyName}`;
         toCurrencySelect.appendChild(optionTo);
     }
-
-    if (currenciesData['USD']) fromCurrencySelect.value = 'USD';
-    if (currenciesData['IDR']) toCurrencySelect.value = 'IDR';
 }
 
-// 4. Fungsi Utama untuk Mengambil Kurs dan Menghitung Konversi
+// Objek untuk memetakan simbol mata uang (beberapa yang umum)
+const currencySymbols = {
+    "USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "AUD": "A$", 
+    "CAD": "C$", "CHF": "Fr", "CNY": "¥", "SEK": "kr", "NZD": "$", 
+    "IDR": "Rp", "INR": "₹", "BRL": "R$", "RUB": "₽", "ZAR": "R",
+    "SGD": "S$", "HKD": "HK$", "MYR": "RM", "THB": "฿", "PHP": "₱"
+};
+
+// Memperbarui teks dan simbol yang terlihat di UI
+function updateCurrencyDisplay() {
+    const fromCode = fromCurrencySelect.value;
+    const toCode = toCurrencySelect.value;
+    
+    fromCodeDisplay.textContent = fromCode;
+    toCodeDisplay.textContent = toCode;
+    
+    fromSymbol.textContent = currencySymbols[fromCode] || '';
+    toSymbol.textContent = currencySymbols[toCode] || '';
+}
+
+// Memformat angka agar rapi (misal: 1000.5 -> 1.000,50)
+function formatNumber(num) {
+    return new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4
+    }).format(num);
+}
+
+// Menghitung konversi
 async function calculate() {
-    const amount = parseFloat(amountInput.value);
-    const fromCurrency = fromCurrencySelect.value;
-    const toCurrency = toCurrencySelect.value;
+    const amount = amountInput.value;
+    const from = fromCurrencySelect.value;
+    const to = toCurrencySelect.value;
 
-    if (!fromCurrency || !toCurrency) return;
-
-    if (isNaN(amount) || amount === 0) {
-        conversionResultText.textContent = '0';
-        exchangeRateInfoText.textContent = `1 ${fromCurrency} = - ${toCurrency}`;
+    if (amount === '' || isNaN(amount)) {
+        resultDisplay.textContent = '0';
         return;
     }
 
-    if (fromCurrency === toCurrency) {
-        conversionResultText.textContent = formatCurrency(amount);
-        exchangeRateInfoText.textContent = `1 ${fromCurrency} = 1 ${toCurrency}`;
-        triggerResultAnimation();
+    if (from === to) {
+        resultDisplay.textContent = formatNumber(amount);
+        exchangeRateInfo.textContent = `1 ${from} = 1 ${to}`;
+        updateChartData(from, to);
         return;
     }
 
     try {
-        if (!cachedRates[fromCurrency] || !cachedRates[fromCurrency].rates[toCurrency]) {
-            exchangeRateInfoText.textContent = 'Mengambil data kurs...';
-            const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=${fromCurrency}`);
-            if (!response.ok) throw new Error('Gagal');
-            cachedRates[fromCurrency] = await response.json();
-        }
+        const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=${from}&symbols=${to}`);
+        if (!response.ok) throw new Error('API Error');
+        const data = await response.json();
 
-        const rateData = cachedRates[fromCurrency];
-        const rate = rateData.rates[toCurrency];
+        currentRate = data.rates[to];
+        const convertedAmount = amount * currentRate;
+
+        // Tampilkan hasil dengan animasi fade
+        resultDisplay.textContent = formatNumber(convertedAmount);
+        resultDisplay.classList.remove('fade-update');
+        void resultDisplay.offsetWidth; // trigger reflow
+        resultDisplay.classList.add('fade-update');
+
+        // Tampilkan info rate dan tanggal
+        exchangeRateInfo.textContent = `1 ${from} = ${formatNumber(currentRate)} ${to}`;
+        lastUpdateSpan.textContent = data.date;
         
-        // Memecah format tanggal YYYY-MM-DD menjadi lebih mudah dibaca (misal 9 Jul 2026)
-        const dateObj = new Date(rateData.date);
-        lastUpdateText.textContent = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-
-        const result = amount * rate;
-
-        conversionResultText.textContent = formatCurrency(result);
-        triggerResultAnimation(); // Mainkan animasi memudar/geser
-        
-        // Memformat nilai kurs agar rapi (max 4 angka di belakang koma)
-        const formattedRate = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 4 }).format(rate);
-        exchangeRateInfoText.textContent = `1 ${fromCurrency} = ${formattedRate} ${toCurrency}`;
+        // Update Grafik
+        updateChartData(from, to);
 
     } catch (error) {
-        conversionResultText.textContent = "Error";
-        exchangeRateInfoText.textContent = "Gagal mengambil kurs.";
+        console.error('Error saat menghitung:', error);
+        resultDisplay.textContent = 'Error';
     }
 }
 
-// 5. Menambahkan "pendengar" agar aplikasi merespon input
-// Memblokir huruf seperti 'e', '+', dan '-' yang bawaannya diizinkan oleh HTML untuk angka sains
+// Mencegah input huruf e, +, - pada input angka
 amountInput.addEventListener('keydown', (e) => {
     if (['e', 'E', '+', '-'].includes(e.key)) {
         e.preventDefault();
     }
 });
 
-// Otomatis menghitung ulang ketika nilai berubah
+// Event Listeners
 amountInput.addEventListener('input', calculate);
-fromCurrencySelect.addEventListener('change', calculate);
-toCurrencySelect.addEventListener('change', calculate);
 
-// 6. Logika Tombol Swap (Tukar Mata Uang)
-swapBtn.addEventListener('click', () => {
-    // Animasi putar orb sudah di-handle penuh oleh hover/active CSS,
-    // di sini kita hanya perlu menukar isi datanya.
-    const temp = fromCurrencySelect.value;
-    fromCurrencySelect.value = toCurrencySelect.value;
-    toCurrencySelect.value = temp;
+fromCurrencySelect.addEventListener('change', () => {
+    updateCurrencyDisplay();
     calculate();
 });
 
-// Mulai aplikasi
+toCurrencySelect.addEventListener('change', () => {
+    updateCurrencyDisplay();
+    calculate();
+});
+
+swapBtn.addEventListener('click', () => {
+    const temp = fromCurrencySelect.value;
+    fromCurrencySelect.value = toCurrencySelect.value;
+    toCurrencySelect.value = temp;
+    
+    updateCurrencyDisplay();
+    calculate();
+});
+
+// --- FITUR GRAFIK (CHART.JS) ---
+
+function getPastDate(days) {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString().split('T')[0]; // Format YYYY-MM-DD
+}
+
+async function updateChartData(from, to) {
+    if (from === to) {
+        // Jika mata uang sama, kosongkan atau gambar garis lurus
+        renderChart([], []);
+        return;
+    }
+
+    const startDate = getPastDate(30);
+    // API Frankfurter menggunakan /v1/ untuk endpoint rentang waktu
+    const url = `https://api.frankfurter.dev/v1/${startDate}..?base=${from}&symbols=${to}`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Chart API Error');
+        const data = await response.json();
+        
+        const labels = Object.keys(data.rates); // Tanggal
+        const values = labels.map(date => data.rates[date][to]); // Nilai kurs
+        
+        renderChart(labels, values);
+    } catch (error) {
+        console.error('Gagal memuat data grafik', error);
+    }
+}
+
+function getChartColors() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+        line: isDark ? '#d8cc54' : '#c6d126', // Warna kuning senada swap btn
+        text: isDark ? '#aaaaaa' : '#666666',
+        grid: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+    };
+}
+
+function renderChart(labels, data) {
+    const ctx = document.getElementById('rateChart').getContext('2d');
+    const colors = getChartColors();
+
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Nilai Tukar',
+                data: data,
+                borderColor: colors.line,
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                tension: 0.3 // Membuat garis sedikit melengkung (smooth)
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    displayColors: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: colors.text, maxTicksLimit: 6 }
+                },
+                y: {
+                    grid: { color: colors.grid },
+                    ticks: { color: colors.text }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+}
+
+// --- TEMA GELAP / TERANG ---
+
+themeToggle.addEventListener('click', () => {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Render ulang grafik agar warnanya ikut berubah
+    if (chartInstance) {
+        const colors = getChartColors();
+        chartInstance.data.datasets[0].borderColor = colors.line;
+        chartInstance.options.scales.x.ticks.color = colors.text;
+        chartInstance.options.scales.y.ticks.color = colors.text;
+        chartInstance.options.scales.y.grid.color = colors.grid;
+        chartInstance.update();
+    }
+});
+
+// Cek tema tersimpan saat load
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+} else {
+    // Default tema terang untuk desain baru
+    document.documentElement.setAttribute('data-theme', 'light');
+}
+
+// Inisialisasi awal
 fetchCurrencies();

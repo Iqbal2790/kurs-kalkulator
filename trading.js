@@ -1,13 +1,14 @@
 // Elemen DOM Input
 const buyUsdAmountInput = document.getElementById('buyUsdAmount');
 const buyPriceInput = document.getElementById('buyPrice');
-const sellBtcAmountInput = document.getElementById('sellBtcAmountInput');
+const sellPercentageSlider = document.getElementById('sellPercentageSlider');
 const sellPriceInput = document.getElementById('sellPrice');
 
 // Elemen DOM Teks/Hasil
 const buyBtcAmountDisplay = document.getElementById('buyBtcAmount');
+const sellPercentageText = document.getElementById('sellPercentageText');
+const sellBtcAmountDisplay = document.getElementById('sellBtcAmountDisplay');
 const sellUsdAmountDisplay = document.getElementById('sellUsdAmountDisplay');
-const sellWarning = document.getElementById('sellWarning');
 
 const pnlAmountDisplay = document.getElementById('pnlAmount');
 const pnlPercentageDisplay = document.getElementById('pnlPercentage');
@@ -51,23 +52,19 @@ function updateFontSize(element, text) {
 function calculateTrading() {
     const buyUsd = parseFloat(buyUsdAmountInput.value) || 0;
     const buyPrice = parseFloat(buyPriceInput.value) || 0;
-    const sellBtc = parseFloat(sellBtcAmountInput.value) || 0;
+    const sellPercentage = parseFloat(sellPercentageSlider.value) || 0;
     const sellPrice = parseFloat(sellPriceInput.value) || 0;
 
     // Hitung Auto Convert BTC dan USD
     const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
+    const sellBtc = buyBtc * (sellPercentage / 100);
     const sellUsd = sellBtc * sellPrice;
 
-    // Tampilkan kuantitas BTC (format 8 desimal max) dan Hasil Jual USD
+    // Tampilkan Porsi, kuantitas BTC (format 8 desimal max) dan Hasil Jual USD
+    sellPercentageText.textContent = `${sellPercentage}%`;
     buyBtcAmountDisplay.textContent = `${buyBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
+    sellBtcAmountDisplay.textContent = `${sellBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
     sellUsdAmountDisplay.textContent = formatMoney(sellUsd);
-
-    // Validasi kuantitas jual tidak melebihi beli
-    if (sellBtc > buyBtc && buyBtc > 0) {
-        sellWarning.style.display = 'block';
-    } else {
-        sellWarning.style.display = 'none';
-    }
 
     // Modal yang terpakai untuk kuantitas BTC yang dijual
     const costOfSoldBtc = sellBtc * buyPrice;
@@ -106,20 +103,24 @@ function calculateTrading() {
 }
 
 // Mencegah input huruf e, +, - pada input angka
-[buyUsdAmountInput, buyPriceInput, sellBtcAmountInput, sellPriceInput].forEach(input => {
-    input.addEventListener('keydown', (e) => {
-        if (['e', 'E', '+', '-'].includes(e.key)) {
-            e.preventDefault();
-        }
-    });
+[buyUsdAmountInput, buyPriceInput, sellPercentageSlider, sellPriceInput].forEach(input => {
+    if (input.type === 'number') {
+        input.addEventListener('keydown', (e) => {
+            if (['e', 'E', '+', '-'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
     
     input.addEventListener('input', () => {
         localStorage.setItem('trade_buyUsd', buyUsdAmountInput.value);
         localStorage.setItem('trade_buyPrice', buyPriceInput.value);
-        localStorage.setItem('trade_sellBtc', sellBtcAmountInput.value);
+        localStorage.setItem('trade_sellPercentage', sellPercentageSlider.value);
         localStorage.setItem('trade_sellPrice', sellPriceInput.value);
 
-        updateFontSize(input, input.value);
+        if (input.type === 'number') {
+            updateFontSize(input, input.value);
+        }
         calculateTrading();
     });
 });
@@ -127,7 +128,7 @@ function calculateTrading() {
 // Load dari Cache jika ada
 if (localStorage.getItem('trade_buyUsd')) buyUsdAmountInput.value = localStorage.getItem('trade_buyUsd');
 if (localStorage.getItem('trade_buyPrice')) buyPriceInput.value = localStorage.getItem('trade_buyPrice');
-if (localStorage.getItem('trade_sellBtc')) sellBtcAmountInput.value = localStorage.getItem('trade_sellBtc');
+if (localStorage.getItem('trade_sellPercentage')) sellPercentageSlider.value = localStorage.getItem('trade_sellPercentage');
 if (localStorage.getItem('trade_sellPrice')) sellPriceInput.value = localStorage.getItem('trade_sellPrice');
 
 // Jalankan pertama kali

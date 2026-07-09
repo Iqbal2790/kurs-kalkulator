@@ -147,6 +147,17 @@ async function fetchExchangeData() {
     }
 }
 
+function updateFontSize(element, text) {
+    const len = text.length;
+    if (len > 18) {
+        element.style.fontSize = '2rem';
+    } else if (len > 12) {
+        element.style.fontSize = '3rem';
+    } else {
+        element.style.fontSize = ''; // kembali ke ukuran default CSS
+    }
+}
+
 // Menghitung konversi seketika (saat ngetik)
 function calculate() {
     const amount = amountInput.value;
@@ -163,6 +174,8 @@ function calculate() {
 
     // Tampilkan hasil dengan animasi fade
     resultDisplay.textContent = formatNumber(convertedAmount, isCryptoTo);
+    updateFontSize(resultDisplay, resultDisplay.textContent);
+    
     resultDisplay.classList.remove('fade-update');
     void resultDisplay.offsetWidth; // trigger reflow
     resultDisplay.classList.add('fade-update');
@@ -176,7 +189,10 @@ amountInput.addEventListener('keydown', (e) => {
 });
 
 // Event Listeners (Sekarang calculate tidak fetch internet)
-amountInput.addEventListener('input', calculate);
+amountInput.addEventListener('input', () => {
+    updateFontSize(amountInput, amountInput.value);
+    calculate();
+});
 
 fromCurrencySelect.addEventListener('change', () => {
     updateCurrencyDisplay();

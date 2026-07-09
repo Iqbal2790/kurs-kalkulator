@@ -1,5 +1,5 @@
 // Konfigurasi ID Spreadsheet (Harus diisi dengan ID Google Sheet milik user)
-const SHEET_ID = 'MASUKKAN_ID_SPREADSHEET_DI_SINI'; 
+const SHEET_ID = '1Gu8bxnhmGM6Olc9KEKP5c2o5rBflT9Q6Rpdc5eJdR4o'; 
 
 function doGet() {
   return HtmlService.createTemplateFromFile('Index')

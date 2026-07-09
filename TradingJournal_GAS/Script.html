@@ -1,0 +1,192 @@
+<script>
+// Elemen DOM Input
+const buyUsdAmountInput = document.getElementById('buyUsdAmount');
+const buyPriceInput = document.getElementById('buyPrice');
+const sellPercentageSlider = document.getElementById('sellPercentageSlider');
+const sellPriceInput = document.getElementById('sellPrice');
+
+// Elemen DOM Teks/Hasil
+const buyBtcAmountDisplay = document.getElementById('buyBtcAmount');
+const sellPercentageText = document.getElementById('sellPercentageText');
+const sellBtcAmountDisplay = document.getElementById('sellBtcAmountDisplay');
+const sellUsdAmountDisplay = document.getElementById('sellUsdAmountDisplay');
+
+const pnlAmountDisplay = document.getElementById('pnlAmount');
+const pnlPercentageDisplay = document.getElementById('pnlPercentage');
+const totalInvestmentDisplay = document.getElementById('totalInvestment');
+const totalReturnDisplay = document.getElementById('totalReturn');
+
+// Elemen DOM Jurnal
+const saveJournalBtn = document.getElementById('saveJournalBtn');
+const tradeNotes = document.getElementById('tradeNotes');
+const saveStatus = document.getElementById('saveStatus');
+
+// Theme Toggle logic
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+});
+
+// Format Angka
+function formatMoney(num) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+    }).format(num);
+}
+
+function updateFontSize(element, text) {
+    const len = text.length;
+    if (len > 18) {
+        element.style.fontSize = 'clamp(1.5rem, 3vw, 2rem)';
+    } else if (len > 12) {
+        element.style.fontSize = 'clamp(2rem, 4.5vw, 2.8rem)';
+    } else if (len > 8) {
+        element.style.fontSize = 'clamp(2.5rem, 5.5vw, 3.5rem)';
+    } else {
+        element.style.fontSize = ''; // fallback
+    }
+}
+
+// Fungsi Menghitung Profit/Loss
+function calculateTrading() {
+    const buyUsd = parseFloat(buyUsdAmountInput.value) || 0;
+    const buyPrice = parseFloat(buyPriceInput.value) || 0;
+    const sellPercentage = parseFloat(sellPercentageSlider.value) || 0;
+    const sellPrice = parseFloat(sellPriceInput.value) || 0;
+
+    const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
+    const sellBtc = buyBtc * (sellPercentage / 100);
+    const sellUsd = sellBtc * sellPrice;
+
+    sellPercentageText.textContent = `${sellPercentage}%`;
+    buyBtcAmountDisplay.textContent = `${buyBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
+    sellBtcAmountDisplay.textContent = `${sellBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
+    sellUsdAmountDisplay.textContent = formatMoney(sellUsd);
+
+    const costOfSoldBtc = sellBtc * buyPrice;
+    
+    const pnlAmount = sellUsd - costOfSoldBtc;
+    
+    let pnlPercentage = 0;
+    if (costOfSoldBtc > 0) {
+        pnlPercentage = (pnlAmount / costOfSoldBtc) * 100;
+    }
+
+    const sign = pnlAmount >= 0 ? '+' : '';
+    pnlAmountDisplay.textContent = `${sign}${formatMoney(pnlAmount)}`;
+    pnlPercentageDisplay.textContent = `${sign}${pnlPercentage.toFixed(2)}%`;
+    totalInvestmentDisplay.textContent = formatMoney(costOfSoldBtc); 
+    totalReturnDisplay.textContent = formatMoney(sellUsd); 
+
+    updateFontSize(pnlAmountDisplay, pnlAmountDisplay.textContent);
+    updateFontSize(pnlPercentageDisplay, pnlPercentageDisplay.textContent);
+
+    if (pnlAmount >= 0) {
+        pnlAmountDisplay.className = 'result-display text-green fade-update';
+        pnlPercentageDisplay.className = 'result-display text-green fade-update';
+    } else {
+        pnlAmountDisplay.className = 'result-display text-red fade-update';
+        pnlPercentageDisplay.className = 'result-display text-red fade-update';
+    }
+    
+    void pnlAmountDisplay.offsetWidth;
+}
+
+[buyUsdAmountInput, buyPriceInput, sellPercentageSlider, sellPriceInput].forEach(input => {
+    if (input.type === 'number') {
+        input.addEventListener('keydown', (e) => {
+            if (['e', 'E', '+', '-'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    input.addEventListener('input', () => {
+        localStorage.setItem('trade_buyUsd', buyUsdAmountInput.value);
+        localStorage.setItem('trade_buyPrice', buyPriceInput.value);
+        localStorage.setItem('trade_sellPercentage', sellPercentageSlider.value);
+        localStorage.setItem('trade_sellPrice', sellPriceInput.value);
+
+        if (input.type === 'number') {
+            updateFontSize(input, input.value);
+        }
+        calculateTrading();
+    });
+});
+
+if (localStorage.getItem('trade_buyUsd')) buyUsdAmountInput.value = localStorage.getItem('trade_buyUsd');
+if (localStorage.getItem('trade_buyPrice')) buyPriceInput.value = localStorage.getItem('trade_buyPrice');
+if (localStorage.getItem('trade_sellPercentage')) sellPercentageSlider.value = localStorage.getItem('trade_sellPercentage');
+if (localStorage.getItem('trade_sellPrice')) sellPriceInput.value = localStorage.getItem('trade_sellPrice');
+
+calculateTrading();
+
+
+// --- FUNGSI SIMPAN KE JURNAL (GOOGLE SHEETS) ---
+saveJournalBtn.addEventListener('click', () => {
+    saveJournalBtn.disabled = true;
+    saveJournalBtn.style.opacity = '0.5';
+    saveStatus.textContent = 'Menyimpan...';
+    saveStatus.style.color = 'var(--text-secondary)';
+
+    const buyUsd = parseFloat(buyUsdAmountInput.value) || 0;
+    const buyPrice = parseFloat(buyPriceInput.value) || 0;
+    const sellPercentage = parseFloat(sellPercentageSlider.value) || 0;
+    const sellPrice = parseFloat(sellPriceInput.value) || 0;
+    
+    const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
+    const sellBtc = buyBtc * (sellPercentage / 100);
+    const sellUsd = sellBtc * sellPrice;
+    const costOfSoldBtc = sellBtc * buyPrice;
+    
+    const pnlAmount = sellUsd - costOfSoldBtc;
+    let pnlPercentage = 0;
+    if (costOfSoldBtc > 0) {
+        pnlPercentage = (pnlAmount / costOfSoldBtc) * 100;
+    }
+
+    const tradeData = {
+        buyUsd: buyUsd,
+        buyPrice: buyPrice,
+        sellPercentage: sellPercentage,
+        sellPrice: sellPrice,
+        pnlUsd: pnlAmount,
+        pnlPercentage: pnlPercentage,
+        notes: tradeNotes.value
+    };
+
+    // Panggil fungsi Code.gs
+    google.script.run
+        .withSuccessHandler((response) => {
+            saveJournalBtn.disabled = false;
+            saveJournalBtn.style.opacity = '1';
+            
+            if (response.success) {
+                saveStatus.textContent = '✅ Berhasil disimpan ke Jurnal!';
+                saveStatus.style.color = '#4caf50';
+                tradeNotes.value = ''; // Reset notes field
+                
+                // Hapus pesan setelah 3 detik
+                setTimeout(() => { saveStatus.textContent = ''; }, 3000);
+            } else {
+                saveStatus.textContent = '❌ Gagal: ' + response.message;
+                saveStatus.style.color = '#f44336';
+            }
+        })
+        .withFailureHandler((error) => {
+            saveJournalBtn.disabled = false;
+            saveJournalBtn.style.opacity = '1';
+            saveStatus.textContent = '❌ Error jaringan / server!';
+            saveStatus.style.color = '#f44336';
+            console.error(error);
+        })
+        .saveTrade(tradeData);
+});
+</script>

@@ -65,11 +65,11 @@
                 <h4 style="margin-bottom: 15px; color: var(--text-secondary); font-size: 1.1rem;">🔴 Jual (Sell)</h4>
                 
                 <div class="amount-section" style="margin-bottom: 20px;">
-                    <div class="section-label">Jual USD (Hasil)</div>
+                    <div class="section-label">Jual BTC (Kuantitas)</div>
                     <div class="input-row">
-                        <input type="number" id="sellUsdAmount" value="1100" min="0" step="any">
+                        <input type="number" id="sellBtcAmountInput" value="0.01666667" min="0" step="any">
                         <div class="currency-selector">
-                            <div class="selected-display"><span class="currency-symbol">$</span><span class="currency-code">USD</span></div>
+                            <div class="selected-display"><span class="currency-symbol">₿</span><span class="currency-code">BTC</span></div>
                         </div>
                     </div>
                 </div>
@@ -83,7 +83,7 @@
                         </div>
                     </div>
                     <div style="margin-top: 10px; font-size: 0.95rem; color: var(--text-secondary);">
-                        Kuantitas Dijual: <span id="sellBtcAmount" style="font-weight: 600; color: var(--text-primary);">0 BTC</span>
+                        Hasil Penjualan: <span id="sellUsdAmountDisplay" style="font-weight: 600; color: var(--text-primary);">$0.00</span>
                         <div id="sellWarning" style="color: #f44336; display: none; margin-top: 5px; font-weight: 500;">⚠️ Error: Jual melebihi kuantiti beli!</div>
                     </div>
                 </div>

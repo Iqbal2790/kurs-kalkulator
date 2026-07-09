@@ -1,14 +1,12 @@
-// trading.js - Logika untuk Trading Kalkulator
-
 // Elemen DOM Input
 const buyUsdAmountInput = document.getElementById('buyUsdAmount');
 const buyPriceInput = document.getElementById('buyPrice');
-const sellUsdAmountInput = document.getElementById('sellUsdAmount');
+const sellBtcAmountInput = document.getElementById('sellBtcAmountInput');
 const sellPriceInput = document.getElementById('sellPrice');
 
-// Elemen DOM Teks BTC
+// Elemen DOM Teks/Hasil
 const buyBtcAmountDisplay = document.getElementById('buyBtcAmount');
-const sellBtcAmountDisplay = document.getElementById('sellBtcAmount');
+const sellUsdAmountDisplay = document.getElementById('sellUsdAmountDisplay');
 const sellWarning = document.getElementById('sellWarning');
 
 const pnlAmountDisplay = document.getElementById('pnlAmount');
@@ -53,16 +51,16 @@ function updateFontSize(element, text) {
 function calculateTrading() {
     const buyUsd = parseFloat(buyUsdAmountInput.value) || 0;
     const buyPrice = parseFloat(buyPriceInput.value) || 0;
-    const sellUsd = parseFloat(sellUsdAmountInput.value) || 0;
+    const sellBtc = parseFloat(sellBtcAmountInput.value) || 0;
     const sellPrice = parseFloat(sellPriceInput.value) || 0;
 
-    // Hitung Auto Convert BTC
+    // Hitung Auto Convert BTC dan USD
     const buyBtc = buyPrice > 0 ? buyUsd / buyPrice : 0;
-    const sellBtc = sellPrice > 0 ? sellUsd / sellPrice : 0;
+    const sellUsd = sellBtc * sellPrice;
 
-    // Tampilkan kuantitas BTC (format 8 desimal max)
+    // Tampilkan kuantitas BTC (format 8 desimal max) dan Hasil Jual USD
     buyBtcAmountDisplay.textContent = `${buyBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
-    sellBtcAmountDisplay.textContent = `${sellBtc.toLocaleString('en-US', {maximumFractionDigits: 8})} BTC`;
+    sellUsdAmountDisplay.textContent = formatMoney(sellUsd);
 
     // Validasi kuantitas jual tidak melebihi beli
     if (sellBtc > buyBtc && buyBtc > 0) {
@@ -108,7 +106,7 @@ function calculateTrading() {
 }
 
 // Mencegah input huruf e, +, - pada input angka
-[buyUsdAmountInput, buyPriceInput, sellUsdAmountInput, sellPriceInput].forEach(input => {
+[buyUsdAmountInput, buyPriceInput, sellBtcAmountInput, sellPriceInput].forEach(input => {
     input.addEventListener('keydown', (e) => {
         if (['e', 'E', '+', '-'].includes(e.key)) {
             e.preventDefault();
